@@ -33,3 +33,15 @@
 - 坤毛锡纸烫-百肘不坠
 - Persona 3 Reload / P3R
 - hhim8826
+
+## 0.2.2 新增来源
+
+- [Makoto Yuki [Persona 3 Reload] · Workshop 3030059203](https://steamcommunity.com/sharedfiles/filedetails/?id=3030059203)：作者提供的本地 4K 视频。
+- [桂 Cinnamon · Persona 3 Reload Theme with Moon Phases Clock & MP3 Player](https://steamcommunity.com/sharedfiles/filedetails/?id=3210179384)：背景六景、水波日期及播放器外观，适配为本应用的本地时钟与音乐控件。原包说明列有背景 Pixiv ID：110149698、115454198、109050403。
+- Makoto animated wallpaper.mp4：作者提供的本地青蓝动态背景。
+
+## 0.2.4 新增来源
+
+- Masquerade 系列：用户提供的四段本地人物动态壁纸；原作者及公开链接待补充。
+- 明日方舟联动壁纸：用户提供的三张人物雨窗壁纸；原作者及公开链接待补充。
+- 《女神异闻录３ Reload》S.E.E.S.全成员总攻击场景合集：用作圆弧扩散的动作参考。切换效果由代码绘制，未将该参考视频作为转场素材打包。

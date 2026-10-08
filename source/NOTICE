@@ -1,0 +1,18 @@
+Required Notice: Copyright 2026 eighteclipses
+
+This source snapshot is provided under the PolyForm Noncommercial License
+1.0.0 in LICENSE, only to the extent the author may license the code.
+
+Third-party code retains its own license. In particular, the portions of
+src/shared/sceneMotion.ts adapted from LBEILC/RhineLabUI retain the MIT
+notice in resources/licenses/RhineLabUI-MIT.txt. This project's license
+does not replace or narrow the original permissions for that upstream code.
+
+The project is an unofficial fan project inspired by Persona 3 Reload.
+It is not affiliated with, endorsed by, or sponsored by ATLUS or SEGA.
+Third-party characters, game artwork, video, music, voices, player skins,
+and fonts are not included. No rights to them are granted here.
+
+The application icons and the neutral SVG demo backgrounds/player are
+project-authored resources included with this source snapshot. They are
+covered only to the extent of the author's own copyright.

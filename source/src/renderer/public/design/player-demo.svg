@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="147" viewBox="0 0 600 147">
+<title>Source-authored portable player example</title>
+<defs><linearGradient id="shell" x2="0" y2="1"><stop stop-color="#c0d5db"/><stop offset=".5" stop-color="#6e8b96"/><stop offset="1" stop-color="#324954"/></linearGradient></defs>
+<rect x="6" y="6" width="588" height="135" rx="28" fill="url(#shell)" stroke="#b4e8f0" stroke-width="3"/>
+<rect x="102" y="26" width="450" height="90" rx="14" fill="#112e37" stroke="#8ec9c6" stroke-width="3"/>
+<circle cx="56" cy="73" r="29" fill="#173f4c" stroke="#80d6d6" stroke-width="2"/>
+<path d="M43 77L55 54L67 77L55 92Z" fill="#80d6d6"/>
+</svg>

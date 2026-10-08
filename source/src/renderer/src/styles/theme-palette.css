@@ -1,0 +1,89 @@
+/* Independent accent roles shared by pages, portals and UI artwork. Neutral whites stay white. */
+:root,.study-shell{
+ --theme-pale:white;
+ --ice:var(--theme-pale);
+ --cyan:color-mix(in srgb,var(--theme-color) 70%,white);--cyan-bright:var(--theme-color);--cyan-dim:var(--theme-line);
+ --theme-light:color-mix(in srgb,var(--theme-color) 40%,white);
+ --theme-muted:color-mix(in srgb,var(--theme-color) 22%,#b5b5b5);
+ --theme-dark:color-mix(in srgb,var(--theme-color) 28%,#101010);
+ --theme-panel:color-mix(in srgb,var(--theme-color) 9%,#101010);
+ --theme-line:color-mix(in srgb,var(--theme-color) 30%,transparent);
+ --focus-digit-color:white;
+ --focus-digit-glow:0 0 60px color-mix(in srgb,var(--theme-color) 55%,transparent);
+ --blue:var(--theme-color);--blue-bright:var(--theme-color);--blue-ice:var(--theme-light);
+ --night:var(--theme-panel);--night-2:var(--theme-dark);--deep:var(--theme-dark);
+ --ink-dim:var(--theme-muted);--glass-line:var(--theme-line);
+ --glass:color-mix(in srgb,var(--theme-panel) calc(var(--panel-alpha,.46)*100%),transparent);
+}
+.theme-palette-defs{position:absolute;pointer-events:none;overflow:hidden}
+.study-shell .focus-digits,.study-shell .floating-clock strong{color:var(--focus-digit-color);text-shadow:var(--focus-digit-glow)}
+.study-shell .floating-clock{border-color:var(--theme-line);text-shadow:0 2px 6px var(--theme-dark)}
+.study-shell:not(.ui-hidden) .floating-clock{background:color-mix(in srgb,var(--theme-panel) 60%,transparent)}
+.study-shell .floating-clock small,.study-shell .floating-clock>span{color:var(--theme-light)}
+.p3r-wave-cloud>div,.p3r-date-wave,.portable-body,.portable-controls img,.player-skin-preview,.window-brand .brand-logo{filter:url(#character-accent)}
+.study-shell .p3r-date:not(.p3r-date-wave){color:var(--theme-dark)}
+.study-shell .p3r-time{color:white;text-shadow:3px 3px 0 var(--theme-dark)}
+.study-shell .p3r-weekday{background:var(--theme-dark)}
+.study-shell .p3r-period,.study-shell .p3r-phase-name{color:var(--theme-light);text-shadow:2px 2px 2px var(--theme-dark)}
+.study-shell .p3r-moon{box-shadow:0 0 0 3px var(--theme-light),0 0 14px var(--theme-color)}
+.study-shell .p3r-hemisphere.light,.study-shell .p3r-divider:after{background:var(--theme-light)}
+.study-shell .p3r-hemisphere.dark,.study-shell .p3r-divider{background:var(--theme-dark)}
+.study-shell .clock-preview{background:linear-gradient(130deg,var(--theme-light),var(--theme-color) 60%,var(--theme-dark));border-color:var(--theme-line)}
+.study-shell .floating-widget-player{filter:drop-shadow(0 6px 7px #0006)}
+.study-shell .portable-album{background:var(--theme-dark);border-color:var(--theme-dark);color:var(--theme-light);box-shadow:inset 0 0 6px var(--theme-color)}
+.study-shell .portable-title,.study-shell .portable-display{color:#202020}
+.study-shell .portable-controls button:hover,.study-shell .portable-album:hover{background:var(--theme-line)}
+.study-shell .portable-controls button:focus-visible,.study-shell .portable-album:focus-visible{outline-color:var(--theme-dark)}
+.study-shell .portable-progress i{background:var(--theme-dark)}
+.study-shell .window-bar,.study-shell .music-shell,.study-shell .command-nav{background:color-mix(in srgb,var(--theme-panel) calc((.2 + var(--panel-alpha,.46)*.7)*100%),transparent);border-color:var(--theme-line)}
+.study-shell .music-library,.study-shell .task-board,.study-shell .task-side,.study-shell .month-board,.study-shell .day-board,.study-shell .habit-row{background:color-mix(in srgb,var(--theme-panel) 92%,transparent);border-color:var(--theme-line)}
+.study-shell .customize-heading{background:linear-gradient(100deg,var(--theme-panel),var(--theme-dark));border-left-color:var(--theme-color)}
+.study-shell .customize-layout h2,.study-shell .customize-heading p,.study-shell .page-title .en{color:var(--theme-light)}
+.study-shell .command-item{color:var(--theme-muted)}
+.study-shell .command-num{color:var(--theme-light)}
+.study-shell .command-item.is-active,.study-shell .command-item.is-active .command-num{color:var(--theme-dark)}
+.study-shell .command-item:not(.is-active):hover,.study-shell .btn:not(.primary):not(.danger):hover,.study-shell .window-controls button:not(.close):hover{background:var(--theme-dark);color:white}
+.study-shell .btn.primary,.study-shell .desk-start,.study-shell .music-play,.study-shell .section-index{background:var(--theme-light);color:var(--theme-dark)}
+.study-shell .theurgy>div,.study-shell .growth-strip-bar i,.study-shell .music-cover span{background:var(--theme-color)}
+.study-shell .theurgy>div{box-shadow:0 0 18px var(--theme-line)}
+.study-shell .giant-num{color:color-mix(in srgb,var(--theme-color) 8%,transparent)}
+.study-shell input,.study-shell textarea,.study-shell select{border-color:var(--theme-line)}
+.study-shell input[type=checkbox],.study-shell input[type=range]{accent-color:var(--theme-color)}
+.study-shell input:focus,.study-shell textarea:focus{border-color:var(--theme-color);box-shadow:0 0 12px var(--theme-line)}
+.study-shell :focus-visible{outline-color:var(--theme-light)}
+.study-shell ::-webkit-scrollbar-thumb{background:var(--theme-line)}
+.study-shell input[type=range]::-webkit-slider-runnable-track{background:var(--theme-line)}
+.study-shell input[type=range]::-webkit-slider-thumb{background:var(--theme-light)}
+.study-shell .music-shell input[type=range]::-webkit-slider-thumb,.study-shell .music-library input[type=range]::-webkit-slider-thumb{background:var(--theme-light)}
+.study-shell .music-overline,.study-shell .music-library header small,.study-shell .music-library-row>button>span,.study-shell .music-library h2 span{color:var(--theme-light)}
+.study-shell .music-library-row.selected{background:color-mix(in srgb,var(--theme-color) 16%,var(--theme-panel));border-color:var(--theme-line)}
+.study-shell .desk-kicker,.study-shell .desk-clock>span,.study-shell .desk-clock small,.study-shell .next-focus-top>span,.study-shell .desk-links button,.study-shell .desk-section-title h2,.study-shell .desk-agenda time,.study-shell .growth-strip-label>span,.study-shell .growth-strip-name,.study-shell .habit-history-toggle,.study-shell .habit-drag{color:var(--theme-light)}
+.study-shell .next-focus,.study-shell .desk-growth-strip{border-color:var(--theme-line)}
+.study-shell .desk-links button small,.study-shell .tiny-label,.study-shell .desk-subtitle,.study-shell .desk-empty,.study-shell .desk-today button>span{color:var(--theme-muted)}
+.study-shell .calendar-day.is-today{border-color:var(--theme-color)}
+.study-shell .calendar-day[aria-pressed=true],.study-shell .task-filters button[aria-pressed=true]{background:var(--theme-light);border-color:var(--theme-color);color:var(--theme-dark)}
+.study-shell .calendar-day[aria-pressed=true]>small,.study-shell .calendar-day[aria-pressed=true]>span{color:var(--theme-dark)}
+.study-shell .knowledge-list>button.selected{border-color:var(--theme-color);background:var(--theme-dark)}
+.study-shell .custom-background-controls,.study-shell .habit-notice,.study-shell .knowledge-message{background:var(--theme-panel);border-color:var(--theme-line)}
+.study-shell .month-board h2,.study-shell .task-metrics strong,.study-shell .task-side>small,.study-shell .day-board header>small,.study-shell .planner-empty>span,.study-shell .asset-credits a,.study-shell .asset-credits summary{color:var(--theme-light)}
+.study-shell .page-title:before{background:var(--theme-color)}
+.study-shell .window-brand>span:last-child,.study-shell .window-controls button{color:var(--theme-muted);border-color:var(--theme-line)}
+.study-shell .btn,.study-shell .style-choices button,.study-shell .scene-collections button{border-color:var(--theme-line)}
+.study-shell .style-choices button,.study-shell .scene-collections button{background:color-mix(in srgb,var(--theme-panel) 70%,transparent);color:var(--theme-muted)}
+.study-shell .style-choices button[aria-pressed=true],.study-shell .scene-collections button[aria-pressed=true]{background:var(--theme-dark);border-color:var(--theme-color);color:white}
+.study-shell .focus-hud,.study-shell .shared-playlists,.study-shell .netease-library,.study-shell .shared-playlist-list>div{border-color:var(--theme-line)}
+.study-shell .scene-card-copy{background:linear-gradient(transparent,#101010f5)}
+.study-shell .scene-card-kind{background:#101010bd}
+.study-shell .scene-card-copy small,.study-shell .shared-playlists p,.study-shell .shared-playlist-list small,.study-shell .netease-library,.study-shell .netease-library summary span,.study-shell .netease-playlists small,.study-shell .music-library footer,.study-shell .music-volume{color:var(--theme-muted)}
+.study-shell .next-focus-top small,.study-shell .next-focus-bottom>span,.study-shell .desk-growth-strip>button,.study-shell .desk-today>div:last-child button,.study-shell .desk-section-title button,.study-shell .desk-empty button,.study-shell .growth-strip-name small,.study-shell .home-last-session{color:var(--theme-light)}
+.study-shell .desk-details,.study-shell .desk-growth-strip>button{border-color:var(--theme-line)}
+.study-shell .growth-strip-bar{background:var(--theme-line)}
+.study-shell .today-resonance .growth-notes{color:var(--theme-light);filter:drop-shadow(0 1px 1px #0008)}
+.study-shell .music-library h2,.study-shell .music-library-row>button:first-child,.study-shell .music-track strong{color:#f5f5f5}
+.study-shell .music-timeline span,.study-shell .music-close,.study-shell .music-library-row small,.study-shell .music-message,.study-shell .music-remove,.study-shell .music-list-toggle,.study-shell .music-list-toggle span{color:var(--theme-muted)}
+.study-shell .music-library-row:hover{background:var(--theme-dark)}
+.study-shell input:not([type=range]):not([type=checkbox]),.study-shell textarea,.study-shell select,.study-shell select option{background:color-mix(in srgb,var(--theme-panel) 85%,transparent)}
+
+/* Session time stays white; only its light carries the chosen accent. */
+.study-shell .summary-time,.study-shell .home-last-session strong{color:white;text-shadow:var(--focus-digit-glow)}
+.study-shell .focus-hud{ text-shadow:0 2px 14px var(--theme-dark) }

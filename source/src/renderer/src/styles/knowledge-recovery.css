@@ -1,0 +1,20 @@
+.knowledge-recovery {
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--theme-light) 42%, transparent);
+  background: color-mix(in srgb, var(--theme-panel) 94%, transparent);
+}
+.knowledge-recovery > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+.knowledge-recovery > header span { min-width: 24px; text-align: center; color: var(--theme-pale); }
+.knowledge-recovery > p { margin: 8px 0; font-size: 12px; line-height: 1.6; color: var(--theme-light); }
+.knowledge-recovery-list { display: grid; gap: 6px; max-height: 180px; overflow: auto; }
+.knowledge-recovery-list button { min-height: 52px; padding: 9px; text-align: left; color: var(--theme-pale); background: transparent; border: 1px solid transparent; cursor: pointer; }
+.knowledge-recovery-list button.selected { border-color: var(--theme-light); background: color-mix(in srgb, var(--theme-light) 12%, transparent); }
+.knowledge-recovery-list button strong, .knowledge-recovery-list button small { display: block; overflow-wrap: anywhere; }
+.knowledge-recovery-list button strong { font-size: 13px; font-weight: 500; }
+.knowledge-recovery-list button small { margin-top: 4px; font-size: 11px; color: var(--theme-light); }
+.knowledge-recovery-hint { display: grid; gap: 5px; padding: 12px; border-left: 3px solid var(--theme-light); background: color-mix(in srgb, var(--theme-panel) 94%, transparent); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.knowledge-recovery-hint strong { color: var(--theme-pale); }
+.knowledge-recovery-hint span, .knowledge-recovery-hint small { color: var(--theme-light); }
+.knowledge-editor h2 { overflow-wrap: anywhere; }
+.study-shell[data-page=knowledge][data-player=card] .page-stage-knowledge > .knowledge-hub { padding-bottom: 220px !important; }
+@media (max-height: 750px) { .knowledge-recovery-list { max-height: 120px; } }

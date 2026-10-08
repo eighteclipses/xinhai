@@ -1,0 +1,12 @@
+* text=auto eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.svg text eol=lf
+LICENSE text eol=lf
+NOTICE text eol=lf
+*.png binary -eol
+*.ico binary -eol

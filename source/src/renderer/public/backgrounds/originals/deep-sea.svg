@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <title>Xinhai source example: deep-sea</title>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#041725"/><stop offset="1" stop-color="#0a4a63"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#67ddd1" stop-opacity=".28"/><stop offset="1" stop-color="#67ddd1" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path fill="url(#bg)" d="M0 0H1600V1000H0Z"/>
+  <ellipse cx="1240" cy="180" rx="650" ry="520" fill="url(#glow)"/>
+  <circle cx="97" cy="53" r="1" fill="#67ddd1" opacity="0.12"/><circle cx="236" cy="136" r="2" fill="#67ddd1" opacity="0.18"/><circle cx="375" cy="219" r="3" fill="#67ddd1" opacity="0.24"/><circle cx="514" cy="302" r="1" fill="#67ddd1" opacity="0.30"/><circle cx="653" cy="385" r="2" fill="#67ddd1" opacity="0.12"/><circle cx="792" cy="468" r="3" fill="#67ddd1" opacity="0.18"/><circle cx="931" cy="551" r="1" fill="#67ddd1" opacity="0.24"/><circle cx="1070" cy="634" r="2" fill="#67ddd1" opacity="0.30"/><circle cx="1209" cy="17" r="3" fill="#67ddd1" opacity="0.12"/><circle cx="1348" cy="100" r="1" fill="#67ddd1" opacity="0.18"/><circle cx="1487" cy="183" r="2" fill="#67ddd1" opacity="0.24"/><circle cx="26" cy="266" r="3" fill="#67ddd1" opacity="0.30"/><circle cx="165" cy="349" r="1" fill="#67ddd1" opacity="0.12"/><circle cx="304" cy="432" r="2" fill="#67ddd1" opacity="0.18"/><circle cx="443" cy="515" r="3" fill="#67ddd1" opacity="0.24"/><circle cx="582" cy="598" r="1" fill="#67ddd1" opacity="0.30"/><circle cx="721" cy="681" r="2" fill="#67ddd1" opacity="0.12"/><circle cx="860" cy="64" r="3" fill="#67ddd1" opacity="0.18"/><circle cx="999" cy="147" r="1" fill="#67ddd1" opacity="0.24"/><circle cx="1138" cy="230" r="2" fill="#67ddd1" opacity="0.30"/><circle cx="1277" cy="313" r="3" fill="#67ddd1" opacity="0.12"/><circle cx="1416" cy="396" r="1" fill="#67ddd1" opacity="0.18"/><circle cx="1555" cy="479" r="2" fill="#67ddd1" opacity="0.24"/><circle cx="94" cy="562" r="3" fill="#67ddd1" opacity="0.30"/>
+  <path d="M0 650 Q400 470 850 640 T1600 600 V1000 H0Z" fill="#67ddd1" opacity=".07"/>
+  <path d="M0 830Q400 680 800 820T1600 800" fill="none" stroke="#67ddd1" opacity=".12" stroke-width="2"/>
+</svg>

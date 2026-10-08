@@ -1,0 +1,37 @@
+/* Accent identifies the heading; its content is neutral white. */
+.study-shell .desk-growth-strip>button>strong,
+.study-shell .growth-strip-label>strong,
+.study-shell .desk-today>div:last-child button>strong:not(.today-resonance),
+.study-shell .desk-today>div:last-child button>span,
+.study-shell .desk-subtitle,.study-shell .next-focus-bottom>span,
+.study-shell .home-last-session>span,.study-shell .home-last-session small,
+.study-shell .desk-empty,.study-shell .desk-agenda>span,
+.study-shell .habit-history-toggle strong,
+.study-shell .focus-history-row>span,.study-shell .focus-history-row>strong,
+.study-shell .focus-history-row>span>small,.study-shell .history-notes>small{color:white}
+.study-shell .habit-history-toggle small,.study-shell .habit-history-toggle span{color:var(--theme-light)}
+.study-shell .history-notes .growth-notes{color:var(--theme-light)}
+.study-shell .day-record p{color:white}
+
+/* The header never scales. The real history height flows through the list. */
+.habit-row-main{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.habit-list{overflow-anchor:none}
+.habit-history-reveal{display:grid;grid-template-rows:0fr;opacity:0;visibility:hidden;transition:grid-template-rows .24s ease,opacity .18s ease,visibility 0s .24s}
+.habit-history-reveal[data-open=true]{grid-template-rows:1fr;opacity:1;visibility:visible;transition:grid-template-rows .24s ease,opacity .18s ease,visibility 0s}
+.habit-history-clip{min-height:0;overflow:hidden}
+.habit-history{margin-top:14px}
+.reduce-motion .habit-history-reveal{transition:none}
+@media(prefers-reduced-motion:reduce){.habit-history-reveal{transition:none}}
+
+/* One active plate, with text and plate changing together; no second fill/fade. */
+.study-shell .command-item,.study-shell .command-item.is-active{background:transparent;transition:none;-webkit-tap-highlight-color:transparent}
+.study-shell .command-item::before{transition:none;opacity:0}
+.study-shell .command-item.is-active::before{opacity:1;background:var(--theme-light)}
+.study-shell .command-item .command-num,.study-shell .command-item .command-text{transition:none}
+.study-shell .command-item.is-active,.study-shell .command-item.is-active .command-num{color:var(--theme-dark)}
+.study-shell .command-item:focus-visible{outline:2px solid var(--theme-light);outline-offset:-3px}
+
+.theme-mode{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:18px}
+.theme-mode button{min-height:42px;border:1px solid var(--theme-line);background:var(--theme-panel);color:white;padding:8px 16px;cursor:pointer}
+.theme-mode button[aria-pressed=true]{background:var(--theme-light);color:var(--theme-dark)}
+.theme-mode small{font-size:11px;color:white;margin-left:8px}

@@ -1,0 +1,179 @@
+[
+  {
+    "id": "train-night",
+    "label": "双人靠窗",
+    "description": "夜晚电车 · 往返循环",
+    "kind": "video",
+    "src": "backgrounds/train-night-pp.mp4",
+    "poster": "backgrounds/train-night-still.jpg",
+    "hasCharacter": true
+  },
+  {
+    "id": "train-day",
+    "label": "电车 · 白天",
+    "description": "窗外的光，陪你开始",
+    "kind": "video",
+    "src": "backgrounds/train-day.mp4",
+    "poster": "backgrounds/train-day-still.jpg",
+    "hasCharacter": true
+  },
+  {
+    "id": "classroom",
+    "label": "教室 · 全景",
+    "description": "午后课桌 · 长镜头平滑循环",
+    "kind": "video",
+    "src": "backgrounds/classroom-loop.mp4",
+    "poster": "backgrounds/classroom-still.jpg",
+    "hasCharacter": false
+  },
+  {
+    "id": "classroom-window",
+    "label": "教室 · 窗边",
+    "description": "窗帘与蓝天 · 近景平滑循环",
+    "kind": "video",
+    "src": "backgrounds/classroom-window-loop.mp4",
+    "poster": "backgrounds/classroom-window-still.jpg",
+    "hasCharacter": false
+  },
+  {
+    "id": "makoto-blue",
+    "label": "结城理 · 青蓝",
+    "description": "青蓝光影与随风轻动的发梢",
+    "kind": "video",
+    "src": "backgrounds/makoto-blue.mp4",
+    "poster": "backgrounds/makoto-blue-still.jpg",
+    "hasCharacter": true
+  },
+  {
+    "id": "makoto-yuki-4k",
+    "label": "结城理 · 4K",
+    "description": "青蓝回响 · 4K 动态壁纸",
+    "kind": "video",
+    "src": "backgrounds/makoto-yuki-4k.mp4",
+    "poster": "backgrounds/makoto-yuki-4k-still.jpg",
+    "hasCharacter": true
+  },
+  {
+    "id": "blue4k",
+    "label": "躺姿 · 4K",
+    "description": "留一点时间给自己",
+    "kind": "image",
+    "src": "backgrounds/bg-4k.jpg",
+    "poster": "backgrounds/bg-4k.jpg",
+    "hasCharacter": true
+  },
+  {
+    "id": "stream",
+    "label": "直播间 · 蓝",
+    "description": "纯粹的蓝色空间",
+    "kind": "image",
+    "src": "backgrounds/stream.jpg",
+    "poster": "backgrounds/stream.jpg",
+    "hasCharacter": false
+  },
+  {
+    "id": "sea",
+    "label": "心海",
+    "description": "光线、波纹与缓慢漂浮",
+    "kind": "procedural",
+    "src": "",
+    "poster": "design/sea-study.svg",
+    "hasCharacter": false
+  },
+  {
+    "id": "masq-aigis-red",
+    "label": "艾吉斯 · 绯红",
+    "description": "Masquerade · 战斗装束",
+    "kind": "video",
+    "src": "backgrounds/characters/masq-aigis-red.mp4",
+    "poster": "backgrounds/characters/masq-aigis-red.jpg",
+    "hasCharacter": true,
+    "themeColor": "#ed153b",
+    "collection": "masquerade"
+  },
+  {
+    "id": "masq-aigis-gold",
+    "label": "艾吉斯 · 金黄",
+    "description": "Masquerade · 金色回响",
+    "kind": "video",
+    "src": "backgrounds/characters/masq-aigis-gold.mp4",
+    "poster": "backgrounds/characters/masq-aigis-gold.jpg",
+    "hasCharacter": true,
+    "themeColor": "#e4ce36",
+    "collection": "masquerade"
+  },
+  {
+    "id": "masq-makoto",
+    "label": "结城理 · 青蓝",
+    "description": "Masquerade · 青蓝流动",
+    "kind": "video",
+    "src": "backgrounds/characters/masq-makoto.mp4",
+    "poster": "backgrounds/characters/masq-makoto.jpg",
+    "hasCharacter": true,
+    "themeColor": "#15b8df",
+    "collection": "masquerade"
+  },
+  {
+    "id": "masq-yukari",
+    "label": "由加莉 · 洋红",
+    "description": "Masquerade · 绯色节拍",
+    "kind": "video",
+    "src": "backgrounds/characters/masq-yukari.mp4",
+    "poster": "backgrounds/characters/masq-yukari.jpg",
+    "hasCharacter": true,
+    "themeColor": "#dc35d8",
+    "collection": "masquerade"
+  },
+  {
+    "id": "rain-aigis",
+    "label": "艾吉斯 · 雨窗",
+    "description": "联动壁纸 · 金色雨光",
+    "kind": "image",
+    "src": "backgrounds/characters/rain-aigis.jpg",
+    "poster": "backgrounds/characters/rain-aigis.jpg",
+    "hasCharacter": true,
+    "themeColor": "#e6b751",
+    "collection": "rain"
+  },
+  {
+    "id": "rain-makoto",
+    "label": "结城理 · 雨窗",
+    "description": "联动壁纸 · 冷蓝雨夜",
+    "kind": "image",
+    "src": "backgrounds/characters/rain-makoto.jpg",
+    "poster": "backgrounds/characters/rain-makoto.jpg",
+    "hasCharacter": true,
+    "themeColor": "#629fdb",
+    "collection": "rain"
+  },
+  {
+    "id": "rain-yukari",
+    "label": "由加莉 · 雨窗",
+    "description": "联动壁纸 · 玫瑰雨色",
+    "kind": "image",
+    "src": "backgrounds/characters/rain-yukari.jpg",
+    "poster": "backgrounds/characters/rain-yukari.jpg",
+    "hasCharacter": true,
+    "themeColor": "#d580a2",
+    "collection": "rain"
+  },
+  {
+    "id": "journal",
+    "label": "日记 · 下潜",
+    "description": "入水后，停留在心海深处",
+    "kind": "video",
+    "src": "backgrounds/dive-loop.mp4",
+    "intro": "backgrounds/dive-in.mp4",
+    "poster": "backgrounds/dive-still.jpg",
+    "hasCharacter": true
+  },
+  {
+    "id": "stats",
+    "label": "五维 · 心之海",
+    "description": "看见每一点成长",
+    "kind": "video",
+    "src": "backgrounds/stats-loop.mp4",
+    "poster": "backgrounds/stats-still.jpg",
+    "hasCharacter": true
+  }
+]

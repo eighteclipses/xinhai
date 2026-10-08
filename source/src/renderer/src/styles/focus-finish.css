@@ -1,0 +1,11 @@
+/* Reserve one quiet footer for the receipt; the original footage retains its colors. */
+.allout-refined{background:var(--theme-panel)}
+.allout-refined .allout-footer{position:absolute;inset:auto 0 0;min-height:100px;padding:30px max(24px,4vw) max(20px,env(safe-area-inset-bottom));display:flex;align-items:flex-end;justify-content:space-between;gap:24px;background:linear-gradient(transparent,color-mix(in srgb,var(--theme-panel) 90.98%,transparent));box-sizing:border-box}
+.allout-refined .allout-film-receipt{position:static;max-width:calc(100% - 200px);min-width:0;padding:0 0 0 14px;gap:14px;background:none;border-left:2px solid var(--finish-accent);flex-wrap:wrap}
+.allout-refined .allout-film-receipt>span{color:var(--theme-pale);font-size:11px;letter-spacing:1px}
+.allout-refined .allout-film-receipt strong{font-size:36px;color:white}
+.allout-refined .allout-film-receipt small{flex-basis:100%;color:var(--theme-light);max-width:100%}
+.allout-refined .allout-skip{position:static;flex-shrink:0;margin-left:auto;background:color-mix(in srgb,var(--theme-panel) 85.098%,transparent);border:1px solid color-mix(in srgb,var(--finish-accent) 65%,white);color:white;letter-spacing:1px;padding:10px 18px;min-height:44px}
+.allout-refined .allout-skip:hover{background:color-mix(in srgb,var(--finish-accent) 25%,var(--theme-panel))}
+.allout-refined .allout-skip:focus-visible{outline:2px solid white;outline-offset:4px}
+@media(max-width:700px){.allout-refined .allout-footer{padding:22px 18px max(18px,env(safe-area-inset-bottom));gap:12px}.allout-refined .allout-film-receipt{max-width:calc(100% - 150px);gap:8px}.allout-refined .allout-film-receipt strong{font-size:28px}.allout-refined .allout-skip{padding:10px;font-size:12px}}

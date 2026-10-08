@@ -1,0 +1,27 @@
+appId: com.xinhai.source
+productName: 心海共学 · 源码版
+directories:
+  buildResources: build
+  output: dist/desktop
+files:
+  - out/main/**
+  - out/preload/**
+  - out/renderer/**
+  - package.json
+  - LICENSE
+  - NOTICE
+  - THIRD-PARTY-NOTICES.md
+  - resources/licenses/**
+asarUnpack:
+  - '**/*.node'
+win:
+  icon: build/icon.ico
+  executableName: xinhai-source
+  signAndEditExecutable: false
+nsis:
+  artifactName: xinhai-source-${version}-setup.${ext}
+  shortcutName: 心海共学 · 源码版
+  uninstallDisplayName: 心海共学 · 源码版
+  createDesktopShortcut: always
+  allowToChangeInstallationDirectory: true
+  oneClick: false

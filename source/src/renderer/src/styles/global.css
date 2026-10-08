@@ -1,0 +1,268 @@
+/* The source snapshot uses system fonts; no game font is redistributed. */
+
+:root {
+  --theme-color: #21bce7;
+  /* P3R 官方 CSS 实证色板 */
+  --blue: var(--theme-color);
+  --blue-bright: var(--theme-color);
+  --blue-ice: var(--theme-light);
+  --deep: var(--theme-dark);
+  --night: var(--theme-panel);
+  --night-2: var(--theme-dark);
+  --ice: var(--theme-pale);
+  --pink: #ff5268;
+  --pink-2: #ff2e92;
+  --yellow: #faf6a6;
+  --mint: var(--theme-light);
+  --lav: #989ffb;
+  --coral: #faba80;
+  --sage: #93cc96;
+
+  /* 旧变量别名，保持组件兼容 */
+  --cyan: var(--blue-ice);
+  --cyan-bright: var(--blue-bright);
+  --cyan-dim: color-mix(in srgb,var(--theme-color) 35%,transparent);
+
+  --ink: #ffffff;
+  --ink-dim: color-mix(in srgb,var(--theme-pale) 55%,transparent);
+  --glass: color-mix(in srgb,var(--theme-dark) 55%,transparent);
+  --glass-line: color-mix(in srgb,var(--theme-pale) 22%,transparent);
+  --font-num: 'Bebas Neue', 'Bahnschrift', 'DIN Alternate', 'Arial Narrow', sans-serif;
+  --font-en: 'Arial Narrow', 'Bahnschrift', sans-serif;
+  --font-body: 'Microsoft YaHei', 'Noto Sans SC', 'PingFang SC', sans-serif;
+  --skew: -10deg;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--night);
+  color: var(--ink);
+  user-select: none;
+}
+
+/* 扫描线 + 噪点纹理层 */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(255, 255, 255, 0.028) 3px 4px);
+  mix-blend-mode: overlay;
+}
+
+input,
+textarea {
+  user-select: text;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: color-mix(in srgb,var(--theme-panel) 60%,transparent);
+  border: 1px solid var(--glass-line);
+  border-radius: 2px;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus,
+textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 12px color-mix(in srgb,var(--theme-color) 25%,transparent);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb,var(--theme-color) 40%,transparent);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---- 玻璃面板：切角 + blur 10px + 冰白描边 ---- */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(10px);
+  border-radius: 2px;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+
+/* ---- 斜切模块（官方 -10deg） ---- */
+.slant {
+  transform: skewX(var(--skew));
+}
+.slant > * {
+  transform: skewX(10deg);
+}
+
+/* ---- 巨型数字：斜体 + tabular + 负字距 ---- */
+.giant-num {
+  font-family: var(--font-num);
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 0.8;
+  color: color-mix(in srgb,var(--theme-color) 12%,transparent);
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 英文标签：窄斜体大写 ---- */
+.en-label {
+  font-family: var(--font-en);
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+}
+
+/* ---- P3R 按钮 ---- */
+.btn {
+  font-family: var(--font-body);
+  background: transparent;
+  color: var(--ice);
+  border: 1px solid var(--glass-line);
+  padding: 10px 22px;
+  cursor: pointer;
+  letter-spacing: 0.2em;
+  font-size: 13px;
+  transform: skewX(var(--skew));
+  transition: all 0.15s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+.btn > span {
+  display: inline-block;
+  transform: skewX(10deg);
+}
+.btn:hover {
+  border-color: var(--blue);
+  background: color-mix(in srgb,var(--theme-color) 14%,transparent);
+  color: #fff;
+  transform: skewX(var(--skew)) translateX(4px);
+}
+.btn:active {
+  transform: skewX(var(--skew)) scale(0.97);
+}
+.btn.primary {
+  background: linear-gradient(100deg, var(--pink) 0%, var(--blue-bright) 90%);
+  border-color: var(--blue-bright);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 20px color-mix(in srgb,var(--theme-color) 35%,transparent);
+}
+.btn.primary:hover {
+  box-shadow: 0 0 28px color-mix(in srgb,var(--theme-color) 55%,transparent);
+}
+.btn.danger:hover {
+  border-color: var(--pink);
+  background: rgba(255, 82, 104, 0.14);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- 标签 ---- */
+.tag {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--blue-ice);
+  border: 1px solid var(--glass-line);
+  padding: 2px 10px;
+  transform: skewX(var(--skew));
+  display: inline-block;
+}
+.tag > * {
+  display: inline-block;
+  transform: skewX(10deg);
+}
+
+/* ---- 细分割线 + 45deg 刻度 ---- */
+.hairline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-line) 20%, var(--glass-line) 80%, transparent);
+  position: relative;
+}
+.hairline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -3px;
+  width: 14px;
+  height: 7px;
+  background: var(--blue);
+  transform: skewX(-45deg);
+}
+
+/* ---- 标题 ---- */
+.page-title {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.page-title .en {
+  font-family: var(--font-en);
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.5em;
+  color: var(--blue);
+}
+.page-title .zh {
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+}
+
+/* ---- Theurgy 槽：玫红→电光蓝渐变进度条 ---- */
+.theurgy {
+  height: 6px;
+  background: color-mix(in srgb,var(--theme-pale) 12%,transparent);
+  transform: skewX(-20deg);
+  overflow: hidden;
+}
+.theurgy > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--pink), var(--blue-bright));
+  box-shadow: 0 0 12px color-mix(in srgb,var(--theme-color) 60%,transparent);
+  transition: width 0.4s ease-out;
+}
+.theurgy.full > div {
+  animation: theurgy-pulse 1.2s ease-in-out infinite;
+}
+@keyframes theurgy-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.6); }
+}
+
+/* ---- 白闪 ---- */
+@keyframes white-flash {
+  0% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* ---- 减少动态 ---- */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001s !important;
+  transition-duration: 0.001s !important;
+}

@@ -1,0 +1,15 @@
+.scene-rotation-settings h3{font-size:12px;font-weight:500;margin:20px 0 4px;color:var(--theme-light)}
+.rotation-interval{display:flex;align-items:flex-end;gap:8px;margin:14px 0;flex-wrap:wrap}
+.rotation-interval label{display:flex;flex-direction:column;gap:7px;flex:1;min-width:80px;font-size:12px}
+.rotation-interval input{width:100%;min-width:0}.rotation-interval select{width:78px}
+.rotation-interval .btn{font-size:12px;padding:10px;white-space:nowrap;transform:none}
+.rotation-order{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px}
+.rotation-order select{max-width:70%;font-size:12px}
+.scene-rotation-settings select{color:var(--ink);color-scheme:dark}
+.rotation-scene-picker{margin-top:16px;border-block:1px solid var(--theme-line);padding:12px 0}
+.rotation-scene-picker summary{font-size:12px;cursor:pointer;color:var(--theme-light);line-height:1.8}
+.rotation-scene-picker>div:last-child{max-height:300px;overflow:auto;display:grid;grid-template-columns:1fr;gap:4px}
+.rotation-scene-picker label{display:flex;align-items:center;gap:10px;font-size:12px;cursor:pointer;min-height:38px}
+.rotation-scene-picker input{width:18px;height:18px;flex:none}
+.rotation-batch{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.rotation-batch button{background:none;border:1px solid var(--theme-line);color:var(--theme-light);padding:8px;font-size:11px;cursor:pointer}

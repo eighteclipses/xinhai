@@ -1,0 +1,20 @@
+.theme-settings{padding:22px 24px;margin-bottom:24px}
+.theme-settings>header{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.theme-settings h2{font-size:16px;font-weight:500;letter-spacing:2px;margin:0}
+.theme-settings p{font-size:12px;line-height:1.8;color:var(--theme-muted);margin:8px 0 0}
+.theme-current{display:flex;align-items:center;gap:10px;color:var(--theme-light);font:12px Consolas,monospace}
+.theme-current i,.theme-presets i,.theme-candidates i{width:20px;height:20px;border-radius:50%;border:1px solid #ffffff60;flex:none}
+.theme-presets,.theme-candidates{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.theme-presets button,.theme-candidates button{display:flex;align-items:center;gap:9px;min-height:44px;padding:8px 13px;border:1px solid var(--theme-line);background:var(--theme-panel);color:var(--theme-light);cursor:pointer;font-size:12px}
+.theme-presets button[aria-pressed=true]{border-color:var(--theme-light);background:var(--theme-dark);color:white}
+.theme-presets b{font-size:13px}.theme-settings button:disabled{opacity:.5;cursor:default}
+.theme-custom-row{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin-top:22px}
+.theme-custom-row label{display:flex;flex-direction:column;gap:8px;font-size:11px;color:var(--theme-muted)}
+.theme-settings .theme-picker input{width:56px;height:42px;padding:3px;cursor:pointer;background:transparent}
+.theme-hex input{width:110px;height:42px;font-family:Consolas,monospace}.theme-custom-row .btn{min-height:42px;font-size:12px;padding:10px 16px}
+.theme-hex input[aria-invalid=true]{border-color:var(--pink)}
+.theme-digit-preview{margin-left:auto;text-align:center;padding:0 12px;min-width:130px;align-self:center}
+.theme-digit-preview strong{display:block;font:48px/1 var(--font-num);color:white;text-shadow:0 0 24px var(--preview-color)}
+.theme-digit-preview small{display:block;font-size:10px;color:var(--theme-muted);margin-top:6px}
+.theme-settings .theme-message{color:var(--theme-light)}
+@media(max-width:700px){.theme-settings{padding:18px}.theme-settings>header{align-items:flex-start;flex-wrap:wrap}.theme-digit-preview{margin-left:0}.theme-presets button{flex:1;min-width:130px}.theme-custom-row .btn{flex:1}}

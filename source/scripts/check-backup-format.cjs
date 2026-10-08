@@ -1,0 +1,40 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),crypto=require('node:crypto'),{buildSync}=require('esbuild')
+const root=path.resolve(__dirname,'..'),output=path.join(root,'design-review/full-backup-0.2.21')
+fs.mkdirSync(output,{recursive:true})
+function source(file){const compiled=buildSync({entryPoints:[path.join(root,file)],bundle:true,platform:'node',format:'cjs',write:false,define:{__COMMERCIAL_EDITION__:'true',__PERSONAL_EDITION__:'false'}});const m=new Module(path.join(root,'scripts','.backup-format-fixture.cjs'),module);m.filename=path.join(root,'scripts','.backup-format-fixture.cjs');m.paths=module.paths;m._compile(compiled.outputFiles[0].text,m.filename);return m.exports}
+const schema=source('src/shared/backupDatabase.ts'),archive=source('src/shared/backupArchive.ts'),types=source('src/shared/types.ts'),controllerModule=source('src/shared/backupController.ts')
+const report={ok:false,checks:[]},pass=name=>{report.checks.push(name);console.log('PASS '+name)},copy=v=>JSON.parse(JSON.stringify(v))
+function fixture(){
+ const settings=copy(types.DEFAULT_SETTINGS);Object.assign(settings,{llmKey:'',llmEndpoint:'',llmModel:'',knowledgePath:'E:\\old-vault',background:'custom',wallpaperLibrary:[{id:'wall-a',name:'壁纸',src:'file:///E:/profile/backgrounds/one.png',poster:'file:///E:/profile/backgrounds/one.png',kind:'image',addedAt:1}]});settings.customBackground=copy(settings.wallpaperLibrary[0]);
+ const tables=Object.fromEntries(schema.BACKUP_TABLES.map(t=>[t,[]]));tables.stats=[{id:1,points_json:JSON.stringify(Object.fromEntries(types.DIMENSIONS.map(d=>[d,0])))}];tables.settings=[{id:1,json:JSON.stringify(settings)}];tables.growth_meta=[{id:1,epoch:0}];tables.music_imports=[{id:'a'.repeat(64),path:'E:\\profile\\imported-music\\song.wav',title:'本地音乐',createdAt:1}];tables.review_cards=[{id:'card',question:'问题',answer:'答案',topic:'',sourceRoot:'E:\\old-vault',sourcePath:'笔记.md',dueDate:'2026-09-22',intervalDays:0,reviews:0,archived:0,version:1,createdAt:1,updatedAt:1}]
+ return {format:'xinhai-database-snapshot',version:1,createdAt:1000,tables,sequences:{},clientState:{'xinhai-note:E:\\old-vault:笔记.md':JSON.stringify({content:'未保存内容',revision:'r'}),'xinhai-music-prefs':JSON.stringify({mode:'loop',volume:.4,file:'file:///E:/profile/imported-music/song.wav'}),'xinhai-review-draft-v1':JSON.stringify({id:'draft',question:'草稿',answer:'答案',topic:'',sourceRoot:'E:\\old-vault',sourcePath:'笔记.md',version:0})}}
+}
+function manifest(portable){const body=JSON.stringify(portable.snapshot);return {format:'xinhai-backup',version:1,appVersion:'0.2.21',createdAt:1000,files:[{path:'database.json',kind:'database',size:Buffer.byteLength(body),sha256:crypto.createHash('sha256').update(body).digest('hex')},...portable.mediaSources.map(m=>({path:`media/${m.id}.${m.extension}`,kind:m.kind,size:10,sha256:'a'.repeat(64),id:m.id})),{path:'knowledge/笔记.md',kind:'knowledge',size:5,sha256:'b'.repeat(64)}],directories:['knowledge/空文件夹']}}
+async function main(){
+ const original=fixture(),portable=archive.makePortableBackup(original,'E:\\old-vault'),m=manifest(portable)
+ assert.equal(portable.mediaSources.length,2);assert.equal(original.tables.music_imports[0].path,'E:\\profile\\imported-music\\song.wav')
+ archive.validatePortableBackup(portable.snapshot,m)
+ assert.ok(!JSON.stringify(portable.snapshot).includes('E:\\\\profile'))
+ const resources={knowledgeRoot:'本机学习库',androidKnowledgeRoot:'/private/restored/new/knowledge',media:{m000001:{path:'/private/backgrounds/restored.png',url:'https://app.xinhai.local/local/backgrounds/restored.png'},m000002:{path:'/private/music/restored.wav',url:'https://app.xinhai.local/local/music/restored.wav'}}}
+ const restored=archive.materializeBackup(portable.snapshot,m,resources)
+ assert.equal(restored.tables.music_imports[0].path,resources.media.m000002.path);assert.equal(restored.tables.review_cards[0].sourceRoot,'本机学习库');assert.ok(restored.clientState['xinhai-note:本机学习库:笔记.md']);assert.equal(JSON.parse(restored.clientState['xinhai-music-prefs']).file,resources.media.m000002.url)
+ pass('portable conversion remaps wallpaper, music URLs, card sources and note/review drafts without changing source snapshot')
+ const collision=fixture();collision.clientState['xinhai-note:xinhai-backup://knowledge:笔记.md']=JSON.stringify({content:'another draft',revision:'other'});assert.throws(()=>archive.makePortableBackup(collision,'E:\\old-vault'),/冲突/)
+ for(const state of [{'xinhai-music-prefs':'null'},{'xinhai-note:root:note.md':'{"content":{},"revision":"r"}'},{'xinhai-journal-draft-v1':'{"content":"missing token"}'},{'xinhai-review-draft-v1':'{"question":"missing fields"}'},{'xinhai-focus-tasks-v1':'[null]'},{'xinhai-netease-shares-v1':'[{"id":"1","name":"list","tracks":[null]}]'}])assert.throws(()=>schema.validateBackupClientState(state))
+ pass('rejects draft remapping collisions and malformed client structures before replacing data')
+ for(const p of ['knowledge/../x','knowledge/AUX.txt','knowledge/a:b','knowledge/a\\b','knowledge/a.'])assert.throws(()=>archive.safeBackupPath(p))
+ for(const change of [x=>x.files.push({...x.files.at(-1),path:'knowledge/笔记.md'}),x=>x.files.push({...x.files.at(-1),path:'knowledge/Foo.md'},{...x.files.at(-1),path:'knowledge/foo.md'}),x=>x.files.push({...x.files.at(-1),path:'knowledge/目录'},{...x.files.at(-1),path:'knowledge/目录/子文件'}),x=>x.files[0].size=16*1024*1024+1]){const bad=copy(m);change(bad);assert.throws(()=>archive.validateBackupManifest(bad))}
+ const bad=copy(portable.snapshot),s=JSON.parse(bad.tables.settings[0].json);s.customBackground.src='file:///C:/unrelated.png';bad.tables.settings[0].json=JSON.stringify(s);assert.throws(()=>archive.validatePortableBackup(bad,m))
+ pass('rejects traversal, reserved paths, duplicates, case collisions, file ancestors, excessive database size and undeclared media sources')
+ let mode='cancel',commits=0,finishes=[],syncResumes=0,active=false,verified=0
+ const prepared={ticket:'qa-ticket',manifest:m,snapshot:portable.snapshot,resources}
+ const controller=controllerModule.createBackupController({capture:()=>copy(original),context:async()=>({knowledgeRoot:'E:\\old-vault'}),export:async()=>mode==='cancel'?null:'E:/safe.xinhai-backup',prepare:async()=>copy(prepared),verify:async()=>{verified++;if(mode==='verify-failure')throw Error('file changed')},finish:async(ticket,keep)=>{finishes.push({ticket,keep})},hasActiveFocus:()=>active,pauseSync:async()=>async()=>{syncResumes++},replace:()=>{if(mode==='db-failure')throw Error('transaction rolled back');commits++},resetSync:()=>{}})
+ await controller.prepare();assert.equal(await controller.restore('qa-ticket','恢复备份',{}),null);assert.equal(commits,0);assert.equal(finishes.length,0);assert.equal(syncResumes,1)
+ active=true;await assert.rejects(controller.restore('qa-ticket','恢复备份',{}));active=false
+ mode='verify-failure';await assert.rejects(controller.restore('qa-ticket','恢复备份',{}));assert.equal(commits,0);assert.equal(finishes.at(-1).keep,false)
+ await controller.prepare();mode='db-failure';await assert.rejects(controller.restore('qa-ticket','恢复备份',{}));assert.equal(commits,0);assert.equal(finishes.at(-1).keep,false)
+ await controller.prepare();mode='success';assert.deepEqual(await controller.restore('qa-ticket','恢复备份',{}),{safetyBackup:'E:/safe.xinhai-backup'});assert.equal(commits,1);assert.equal(finishes.at(-1).keep,true);assert.equal(controller.isRestoring,false);assert.equal(verified,3)
+ pass('coordinator cancels safely, refuses active focus, verifies files before replacement, rolls back preparation on failure and retains committed files')
+ report.ok=true
+}
+main().catch(e=>{report.error=String(e.stack||e);console.error(e);process.exitCode=1}).finally(()=>fs.writeFileSync(path.join(output,'format-controller-results.json'),JSON.stringify(report,null,2)+'\n'))

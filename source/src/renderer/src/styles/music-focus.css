@@ -1,0 +1,25 @@
+/* A smaller companion player and a clock aligned to the actual viewport centre. */
+.study-shell .page-stage-focus>.timer-center{justify-content:center!important;padding:24px!important}
+.timer-center .focus-hud{position:fixed;left:50%;top:calc(50% - clamp(60px,6.5vw,92px));translate:-50% 0;width:min(480px,80vw);padding:0;background:none;border:0;backdrop-filter:none;text-align:center!important}
+.timer-center .focus-hud>div:first-child{position:absolute;bottom:100%;width:100%;margin-bottom:18px!important}
+.timer-center .focus-task{position:absolute;bottom:calc(100% + 32px);width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.timer-center .focus-digits{font-size:clamp(120px,13vw,184px)!important;letter-spacing:2px}
+.timer-center .focus-hud .theurgy{width:72%!important;margin:18px auto!important}
+.timer-center .focus-hud>div:has(>.btn){justify-content:center!important}
+.timer-center .focus-ledger{flex-direction:row;justify-content:center;gap:22px;margin-top:16px;font-size:11px}
+.timer-center .focus-ledger span{gap:10px;align-items:center}
+.timer-center .focus-ledger b{font-size:15px}
+.ui-hidden .floating-clock.timer-center{left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);text-align:center;align-items:center;border:0;background:transparent;backdrop-filter:none;padding:0;min-width:0}
+.ui-hidden .floating-clock.timer-center strong{font-size:clamp(120px,13vw,184px);line-height:1;letter-spacing:2px;text-shadow:var(--focus-digit-glow)}
+.ui-hidden .floating-clock.timer-center small{position:absolute;bottom:100%;width:max-content;margin-bottom:18px;font-size:12px}
+.ui-hidden .floating-clock.timer-center>span{position:absolute;top:100%;margin-top:18px;width:max-content}
+.netease-library{flex:none;min-width:0;width:100%;padding:12px 0;border-block:1px solid color-mix(in srgb,var(--theme-light) 18.824%,transparent);color:var(--theme-pale)}
+.netease-library summary{cursor:pointer;font-size:13px;line-height:28px}.netease-library summary span{margin-left:12px;font-size:11px;color:var(--theme-muted)}
+.netease-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.netease-actions .btn{font-size:12px;padding:8px 12px}
+.netease-library p{font-size:12px;line-height:1.7;margin:8px 0;white-space:normal;overflow-wrap:anywhere;max-width:100%}.netease-library>small{display:block;margin-top:10px;color:var(--theme-muted);font-size:11px}
+.netease-playlists{max-height:160px;overflow:auto;margin:12px 0}.netease-playlists label{display:flex;align-items:center;gap:12px;min-height:48px;cursor:pointer}.netease-playlists input{width:18px;height:18px;flex:none}.netease-playlists span{font-size:12px;overflow-wrap:anywhere}.netease-playlists small{display:block;color:var(--theme-muted);font-size:11px;margin-top:3px}
+.music-library{overflow:auto}.music-library-list{flex:1 0 130px;min-height:130px}
+
+.music-library{z-index:80}
+
+.netease-qr{display:flex;align-items:center;gap:20px;padding:12px 0}.netease-qr img{width:180px;height:180px;flex:none;background:white;border-radius:8px}.netease-qr strong{font-size:14px}.netease-qr>div{min-width:0}.netease-qr .btn{font-size:12px;padding:8px 12px}

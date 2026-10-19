@@ -1,4 +1,5 @@
-/* System font fallbacks keep the source build independent of media files. */
+/* Source build uses system font fallbacks; third-party fonts are omitted. */
+/* Source build uses system font fallbacks; third-party fonts are omitted. */
 :root{
  --blue:var(--theme-color);--blue-bright:var(--theme-color);--blue-ice:var(--theme-light);--ice:var(--theme-pale);
  --night:var(--theme-panel);--night-2:var(--theme-dark);--ink-dim:var(--theme-light);

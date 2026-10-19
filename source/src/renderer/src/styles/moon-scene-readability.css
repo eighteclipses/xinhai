@@ -1,0 +1,23 @@
+/* These bright or busy scenes need local contrast under the interface. Keep
+   this separate from the user's wallpaper dim and panel opacity controls. */
+.study-shell:is([data-scene="moon-colonnade-ai"],[data-scene="moon-courtyard-ai"]):not(.ui-hidden)>.interface-layer::before{
+  content:"";
+  position:fixed;
+  inset:var(--title-height) 0 calc(var(--nav-height) + var(--music-height));
+  z-index:1;
+  pointer-events:none;
+  background:linear-gradient(90deg,rgb(8 24 38 / .25),rgb(8 24 38 / .1) 44%,transparent 72%),radial-gradient(ellipse 72% 64% at 4% 100%,rgb(8 24 38 / .62),rgb(8 24 38 / .36) 55%,transparent);
+}
+.study-shell[data-scene="moon-on-water-loop"]:not(.ui-hidden)>.interface-layer::before{
+  content:"";
+  position:fixed;
+  inset:var(--title-height) 0 calc(var(--nav-height) + var(--music-height));
+  z-index:1;
+  pointer-events:none;
+  background:linear-gradient(90deg,rgb(8 24 38 / .48),rgb(8 24 38 / .42) 26%,rgb(8 24 38 / .35) 45%,rgb(8 24 38 / .12) 65%,transparent 78%),radial-gradient(ellipse 68% 68% at 0% 100%,rgb(8 24 38 / .46),rgb(8 24 38 / .24) 56%,transparent);
+}
+.study-shell[data-scene="moon-on-water-loop"] .original-themes .studio-section-heading{
+  background:rgb(8 24 38 / .62);
+  padding:10px 12px;
+  border-radius:6px;
+}

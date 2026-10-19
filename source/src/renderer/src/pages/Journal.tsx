@@ -1,19 +1,53 @@
+import {LearningCategorySelect,LearningCategoryFilter,LearningRecordCategoryEditor,LearningCategoryBadge} from '../components/LearningCategoryControl'
 import {useEffect,useRef,useState} from 'react'
 import {AnimatePresence,motion} from 'framer-motion'
 import GrowthNotes from '../components/GrowthNotes'
 import {growthPhrase} from '../lib/growthPresentation'
 import {useApp} from '../store/app'
-import {useJournal,editJournal,returnToJournal,adjustJournal,analyzeJournal,saveJournal} from '../store/journal'
-import {DIMENSIONS,DIMENSION_COLORS,DIMENSION_NAMES} from '../../../shared/types'
+import {useJournal,editJournal,editJournalCategory,returnToJournal,adjustJournal,analyzeJournal,saveJournal} from '../store/journal'
+import {DIMENSIONS,DIMENSION_COLORS,DIMENSION_NAMES,type Journal as JournalEntry,type JournalCursor} from '../../../shared/types'
 import {COMMERCIAL_EDITION} from '../../../shared/edition'
 import {retainGeneratedCopy} from '../lib/generatedCopy'
 import '../styles/journal.css'
 
 const GUIDES=['今天完成了什么？','今天遇到了什么困难？','今天帮助了谁？','今天学到了什么？','明天最想继续什么？']
 export default function Journal(){
- const journals=useApp(s=>s.journals)
- const {stage,content,result,adjusted,error,storageError,dupWarning,saving,message}=useJournal()
+ const latestJournalId=useApp(s=>s.journals[0]?.id),syncVersion=useApp(s=>s.dataSyncVersion)
+ const [journals,setJournals]=useState<JournalEntry[]>([]),[query,setQuery]=useState(''),[total,setTotal]=useState<number|null>(null),[matchedTotal,setMatchedTotal]=useState<number|null>(null)
+ const [nextCursor,setNextCursor]=useState<JournalCursor|null>(null),[historyLoading,setHistoryLoading]=useState(true),[historyError,setHistoryError]=useState(''),[historyRetry,setHistoryRetry]=useState(0)
+ const [categoryFilter,setCategoryFilter]=useState<string|undefined>()
+ const historyGeneration=useRef(0),historyLock=useRef(false)
+ const {stage,categoryId,content,result,adjusted,error,storageError,dupWarning,saving,message}=useJournal()
  const [expanded,setExpanded]=useState<number|null>(null)
+ const [pendingDelete,setPendingDelete]=useState<number|null>(null),[deleting,setDeleting]=useState<number|null>(null),[deleteMessage,setDeleteMessage]=useState('')
+ async function loadHistory(cursor:JournalCursor|null,reset:boolean,generation=historyGeneration.current){
+  if(!reset&&historyLock.current)return
+  historyLock.current=true;setHistoryLoading(true);setHistoryError('')
+  try{
+   const page=await window.api.listJournalPage({query,cursor,limit:30,...(categoryFilter===undefined?{}:{categoryId:categoryFilter||null})})
+   if(generation!==historyGeneration.current)return
+   setJournals(old=>reset?page.items:[...old,...page.items.filter(item=>!old.some(existing=>existing.id===item.id))])
+   setTotal(page.total);setMatchedTotal(page.matchedTotal);setNextCursor(page.nextCursor)
+  }catch(error){if(generation===historyGeneration.current)setHistoryError(error instanceof Error?error.message:String(error))}
+  finally{if(generation===historyGeneration.current){historyLock.current=false;setHistoryLoading(false)}}
+ }
+ useEffect(()=>{
+  const generation=++historyGeneration.current
+  historyLock.current=true;setHistoryLoading(true);setHistoryError('');setJournals([]);setTotal(null);setMatchedTotal(null);setNextCursor(null);setExpanded(null);setPendingDelete(null)
+  const timer=setTimeout(()=>void loadHistory(null,true,generation),180)
+  return()=>{clearTimeout(timer);++historyGeneration.current}
+ },[query,categoryFilter,latestJournalId,syncVersion,historyRetry])
+ async function removeJournal(id:number,ts:number){
+  if(deleting!==null)return
+  setDeleting(id);setDeleteMessage('')
+  try{
+   const removed=await window.api.deleteJournal(id,ts,'删除日记')
+   setJournals(items=>items.filter(j=>j.id!==id));setTotal(value=>value===null?null:Math.max(0,value-1));setMatchedTotal(value=>value===null?null:Math.max(0,value-1))
+   useApp.setState(state=>({journals:state.journals.filter(j=>j.id!==id)}))
+   setPendingDelete(null);setExpanded(value=>value===id?null:value)
+   setDeleteMessage(removed?'已从日记列表删除。成长分数与成长记录保留。':'这篇日记已经删除，列表已更新。')
+  }catch(error){setDeleteMessage(error instanceof Error?error.message:String(error))}finally{setDeleting(null)}
+ }
  const journalRoot=useRef<HTMLDivElement>(null)
  useEffect(()=>{
   if(!COMMERCIAL_EDITION)return
@@ -26,6 +60,7 @@ export default function Journal(){
   <main className="journal-main">
    <div className="page-title"><span className="en">JOURNAL</span><span className="zh">{stage==='review'?'日记回响':'简短日记'}</span></div>
    <div className="journal-save-status" role="status">{storageError||message||(content?'草稿已自动保存在本机，可随时离开后继续。':'写下今天值得记住的一刻。')}</div>
+   <LearningCategorySelect label="日记学习分类" value={categoryId} onChange={editJournalCategory} disabled={saving||stage==='analyzing'}/>
    <AnimatePresence mode="wait">
     {stage==='write'&&<motion.div key="write" className="journal-editor" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
      <div className="journal-guides">{GUIDES.map(g=><button key={g} className="tag" onClick={()=>editJournal((content?content+'\n':'')+g.replace('？','：'))}><span>{g}</span></button>)}</div>
@@ -60,9 +95,14 @@ export default function Journal(){
    </AnimatePresence>
    {error&&<p className="journal-error" role="alert">{error}</p>}
   </main>
-  <aside className="journal-history"><div className="journal-section-heading"><h3>RECENT · 最近日记</h3><span>{journals.length} 篇</span></div>
-   {journals.length===0&&<p>还没有日记。写下第一篇，留下今天的足迹。</p>}
-   {journals.map(j=><article key={j.id} className="glass journal-history-item"><button className="journal-history-toggle" onClick={()=>setExpanded(expanded===j.id?null:j.id)} aria-expanded={expanded===j.id}><time>{new Date(j.ts).toLocaleDateString('zh-CN')}</time><span>{j.engine==='llm'?(COMMERCIAL_EDITION?'AI 生成 · 日记回响':'AI 回响'):'本地回响'} · {expanded===j.id?'收起':'展开'}</span></button><p className={expanded===j.id?'':'journal-snippet'}>{j.content}</p>{expanded===j.id&&<blockquote data-ai-generated={COMMERCIAL_EDITION&&j.engine==='llm'||undefined}>{j.summary}</blockquote>}<div className="journal-history-growth">{DIMENSIONS.filter(d=>j.scores[d]>0).map(d=><span key={d} style={{color:DIMENSION_COLORS[d]}}>{DIMENSION_NAMES[d]} <GrowthNotes points={j.scores[d]}/></span>)}</div></article>)}
+  <aside className="journal-history"><div className="journal-section-heading"><h3>ARCHIVE · 全部日记</h3><span>{total===null?'正在读取…':query.trim()?`找到 ${matchedTotal} / 共 ${total} 篇`:`共 ${total} 篇`}</span></div>
+   <LearningCategoryFilter value={categoryFilter} onChange={setCategoryFilter}/>
+   <label className="journal-history-search">搜索全部日记<input aria-label="搜索全部日记" maxLength={800} value={query} onChange={event=>setQuery(event.target.value)} placeholder="搜索正文或回响…"/></label>
+   {deleteMessage&&<p className="journal-notice" role="status">{deleteMessage}</p>}
+   {historyError&&<p className="journal-notice" role="alert">读取日记失败：{historyError}<button className="btn" disabled={historyLoading} onClick={()=>setHistoryRetry(value=>value+1)}>重新加载日记</button></p>}
+   {!historyLoading&&!historyError&&journals.length===0&&<p>{query.trim()?'没有匹配的日记，可以换一个关键词。':'还没有日记。写下第一篇，留下今天的足迹。'}</p>}
+   {journals.map(j=><article key={j.id} data-journal-id={j.id} className="glass journal-history-item"><button className="journal-history-toggle" onClick={()=>setExpanded(expanded===j.id?null:j.id)} aria-expanded={expanded===j.id}><time>{new Date(j.ts).toLocaleDateString('zh-CN')}</time><span>{j.engine==='llm'?(COMMERCIAL_EDITION?'AI 生成 · 日记回响':'AI 回响'):'本地回响'} · {expanded===j.id?'收起':'展开'}</span></button><LearningCategoryBadge id={j.categoryId}/>{expanded===j.id&&<LearningRecordCategoryEditor kind="journal" id={j.id} categoryId={j.categoryId} onSaved={()=>setHistoryRetry(n=>n+1)}/>}<p className={expanded===j.id?'':'journal-snippet'}>{j.content}</p>{expanded===j.id&&<blockquote data-ai-generated={COMMERCIAL_EDITION&&j.engine==='llm'||undefined}>{j.summary}</blockquote>}<div className="journal-history-growth">{DIMENSIONS.filter(d=>j.scores[d]>0).map(d=><span key={d} style={{color:DIMENSION_COLORS[d]}}>{DIMENSION_NAMES[d]} <GrowthNotes points={j.scores[d]}/></span>)}</div>{expanded===j.id&&<button className="btn" disabled={deleting!==null||historyLoading} onClick={()=>setPendingDelete(j.id)}>删除这篇日记</button>}{pendingDelete===j.id&&<section className="journal-notice" role="dialog" aria-label="确认删除日记"><strong>确认删除这篇已保存日记？</strong><p>日记列表中的正文与回响将移除。已获得的成长分数与成长记录保留，当前写作草稿不受影响。为防止重复记账，提交历史及同步记录仍可能保留完整正文与回响，并进入之后的新完整备份；已有备份也不会被改写。这不是从所有本机记录中彻底擦除正文。删除会随已启用的局域网同步传播。</p><button className="btn primary" disabled={deleting!==null||historyLoading} onClick={()=>void removeJournal(j.id,j.ts)}>{deleting===j.id?'正在删除…':'确认删除日记'}</button><button className="btn" disabled={deleting!==null} onClick={()=>setPendingDelete(null)}>取消</button></section>}</article>)}
+   <div className="journal-history-pagination" role="status"><span>{total===null?'':`已显示 ${journals.length} / ${matchedTotal} 篇`}</span>{historyLoading?<span>正在读取…</span>:nextCursor&&<button className="btn" disabled={deleting!==null} onClick={()=>void loadHistory(nextCursor,false)}>加载更早日记</button>}</div>
   </aside>
  </div>
 }

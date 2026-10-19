@@ -45,6 +45,7 @@ export function validateBackupManifest(value:unknown):BackupManifest {
 
 function settings(snapshot:DatabaseSnapshot):Record<string,any>{return JSON.parse(String(snapshot.tables.settings[0].json))}
 function editRoots(snapshot:DatabaseSnapshot,from:string,to:string):void {
+  for(const row of snapshot.tables.local_knowledge_categories)if(row.root===from)row.root=to
   const replaceCards=(rows:Array<Record<string,any>>)=>{for(const card of rows)if(card.sourceRoot===from)card.sourceRoot=to}
   replaceCards(snapshot.tables.review_cards)
   for(const row of snapshot.tables.growth_resets){if(!row.practice_json)continue;const practice=JSON.parse(String(row.practice_json));replaceCards(practice.before.review_cards);const after=JSON.parse(practice.after);replaceCards(after.review_cards);practice.after=JSON.stringify(after);row.practice_json=JSON.stringify(practice)}
@@ -90,6 +91,9 @@ function musicState(snapshot:DatabaseSnapshot,map:(source:string)=>string|null):
 }
 export function makePortableBackup(input:DatabaseSnapshot,knowledgeRoot:string):PortableBackup {
   const snapshot=clone(validateDatabaseSnapshot(input)),mediaSources:BackupMediaSource[]=[],sources=new Map<string,string>()
+  // Only this vault's files travel with the archive. Other roots must never be
+  // rebound to same-named files in the restored vault on another device.
+  snapshot.tables.local_knowledge_categories=snapshot.tables.local_knowledge_categories.filter(row=>row.root===knowledgeRoot)
   const add=(source:string,kind:'wallpaper'|'music')=>{
     const key=keyForSource(source),previous=sources.get(key);if(previous)return previous
     const ext=extension(source);if(!(kind==='music'?MUSIC:[...IMAGE,...VIDEO]).includes(ext))fail('当前资料中有不支持的媒体格式')
@@ -110,6 +114,7 @@ export function validatePortableBackup(value:unknown,manifestValue:unknown):Data
   const text=JSON.stringify(value);if(new TextEncoder().encode(text).length>BACKUP_DATABASE_LIMIT)fail('数据库文件超过 16 MiB')
   const snapshot=parseDatabaseSnapshot(text),s=settings(snapshot)
   if(s.knowledgePath!==BACKUP_ROOT)fail('知识库根引用不是可迁移标识')
+  if(snapshot.tables.local_knowledge_categories.some(row=>row.root!==BACKUP_ROOT))fail('笔记分类引用了未随归档迁移的知识库')
   const media=new Map(manifest.files.filter(f=>f.id).map(f=>[backupMediaRef(f.id!),f])),used=new Set<string>()
   const ref=(source:unknown,kind:'wallpaper'|'music')=>{if(typeof source!=='string'||!media.has(source)||media.get(source)!.kind!==kind)fail('媒体引用不在备份清单中');used.add(source as string);return source as string}
   // Validate without mutating the user's parsed data.

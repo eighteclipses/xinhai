@@ -32,7 +32,7 @@ export function loadFocusRecovery(): FocusRecoveryLoad {
       // A delayed renderer checkpoint must not resurrect a session whose
       // idempotent commit receipt already exists. Break records use a fresh
       // token and remain recoverable.
-      if (record.mode === 'focus' || record.runState === 'saving') {
+      if (record.runState!=='waiting'&&(record.mode === 'focus' || record.runState === 'saving')) {
         const committed = db().prepare('SELECT 1 FROM focus_commits WHERE token=? LIMIT 1').get(record.token)
         if (committed) {
           db().prepare('DELETE FROM focus_recovery WHERE id=1 AND token=?').run(record.token)
@@ -48,7 +48,7 @@ export function loadFocusRecovery(): FocusRecoveryLoad {
 export function saveFocusRecovery(record: FocusRecoveryRecord): void {
   const parsed = parseFocusRecovery(record)
   if (!parsed) throw Error('专注恢复状态无效')
-  if (parsed.mode === 'focus' || parsed.runState === 'saving') {
+  if (parsed.runState!=='waiting'&&(parsed.mode === 'focus' || parsed.runState === 'saving')) {
     const committed = db().prepare('SELECT 1 FROM focus_commits WHERE token=? LIMIT 1').get(parsed.token)
     if (committed) {
       db().prepare('DELETE FROM focus_recovery WHERE id=1 AND token=?').run(parsed.token)

@@ -345,7 +345,7 @@ final class ThemeFiles {
     private JSONObject customBackground(String name, File file, String kind) throws JSONException {
         String src = ORIGIN + "/local/backgrounds/" + file.getName();
         String poster = "video".equals(kind)
-                ? "/backgrounds/originals/deep-sea.svg"
+                ? (BuildConfig.COMMERCIAL_EDITION ? "/backgrounds/originals/deep-sea.png" : "/backgrounds/train-night-still.jpg")
                 : src;
         return new JSONObject().put("name", name == null || name.isEmpty() ? file.getName() : name)
                 .put("src", src).put("kind", kind).put("poster", poster);

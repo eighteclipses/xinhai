@@ -8,4 +8,4 @@ export interface SyncStatus {
 export type SyncVector=Record<string,number>
 export interface SyncRegister {value:unknown;clock:number;device:string;seen:SyncVector}
 export interface SyncRecord {table:string;uid:string;fields:Record<string,SyncRegister>;deleted:SyncRegister}
-export interface SyncPacket {version:1;device:string;vector:SyncVector;records:SyncRecord[]}
+export interface SyncPacket {version:1|2|3;device:string;vector:SyncVector;records:SyncRecord[]}

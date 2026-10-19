@@ -1,0 +1,6 @@
+.personal-appearance-presets{flex:0 1 470px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.personal-appearance-actions{display:flex;flex-wrap:wrap;gap:8px}
+.personal-appearance-actions>.btn{min-height:44px;white-space:normal}
+.personal-appearance-presets>small{font-size:11px;line-height:1.8;color:var(--theme-light)}
+.customize-heading .personal-appearance-presets>p{font-size:11px;line-height:1.7;margin:0}
+@media(max-width:900px){.customize-heading:has(.personal-appearance-presets){flex-wrap:wrap;gap:16px}.personal-appearance-presets{flex-basis:100%}}

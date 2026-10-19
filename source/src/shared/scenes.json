@@ -158,6 +158,39 @@
     "collection": "rain"
   },
   {
+    "id": "moon-on-water-loop",
+    "label": "月行水上·纯享循环",
+    "description": "用户提供的72秒无音频循环版 · 桌面1080p60",
+    "kind": "video",
+    "src": "backgrounds/moon-on-water/moon-on-water-loop.mp4",
+    "poster": "backgrounds/moon-on-water/moon-on-water-loop-still.jpg",
+    "hasCharacter": true,
+    "themeColor": "#21bce7",
+    "collection": "moon-on-water"
+  },
+  {
+    "id": "moon-colonnade-ai",
+    "label": "月行水上·长廊（AI修复）",
+    "description": "用户提供的白石长廊场景 · AI修复版",
+    "kind": "image",
+    "src": "backgrounds/moon-on-water/colonnade-restored-v1.png",
+    "poster": "backgrounds/moon-on-water/colonnade-restored-v1.png",
+    "hasCharacter": false,
+    "themeColor": "#d4d4d4",
+    "collection": "moon-on-water"
+  },
+  {
+    "id": "moon-courtyard-ai",
+    "label": "月行水上·庭院（AI修复）",
+    "description": "用户提供的白石庭院场景 · AI修复版",
+    "kind": "image",
+    "src": "backgrounds/moon-on-water/courtyard-restored-v1.png",
+    "poster": "backgrounds/moon-on-water/courtyard-restored-v1.png",
+    "hasCharacter": false,
+    "themeColor": "#d4d4d4",
+    "collection": "moon-on-water"
+  },
+  {
     "id": "journal",
     "label": "日记 · 下潜",
     "description": "入水后，停留在心海深处",

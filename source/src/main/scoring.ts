@@ -1,5 +1,6 @@
 import { COMMERCIAL_EDITION } from '../shared/edition'
 import { requireModelAnalysis, LOCAL_ANALYSIS_ONLY_MESSAGE } from '../shared/modelScope'
+import { COMMERCIAL_JOURNAL_PROMPT } from '../shared/commercialScoringPrompt'
 import { PERSONAL_JOURNAL_PROMPT } from './personalScoringPrompt'
 import { scoreLocal } from '../shared/localScoring'
 export { scoreLocal } from '../shared/localScoring'
@@ -33,7 +34,7 @@ function clampScore(value: unknown): number {
 
 export async function scoreLLM(text: string, client:ModelClient): Promise<ScoreResult> {
   requireModelAnalysis()
-  const result = await completeJson(client, PERSONAL_JOURNAL_PROMPT, `日记：\n${text}`)
+  const result = await completeJson(client, COMMERCIAL_EDITION ? COMMERCIAL_JOURNAL_PROMPT : PERSONAL_JOURNAL_PROMPT, `日记：\n${text}`)
 
   const rawScores = (result.scores && typeof result.scores === 'object' ? result.scores : result) as Record<string, unknown>
   const rawReasons = (result.reasons && typeof result.reasons === 'object' ? result.reasons : {}) as Record<string, unknown>

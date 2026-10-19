@@ -1,6 +1,6 @@
 {
   "name": "xinhai-source",
-  "version": "0.2.27-source.0",
+  "version": "0.2.33-source.0",
   "description": "心海共学个人版源码快照 · 非商业用途",
   "main": "./out/main/index.js",
   "author": "eighteclipses",
@@ -18,7 +18,8 @@
     "dist": "npm run build && electron-builder --win --ia32 --config electron-builder.yml",
     "typecheck": "tsc --noEmit",
     "test": "node scripts/test.cjs",
-    "check:source": "node scripts/check-source.cjs"
+    "check:source": "node scripts/check-source.cjs",
+    "test:native": "node scripts/check-focus-rewards.cjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",

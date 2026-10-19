@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useApp } from '../store/app'
 import type { KnowledgeNote, KnowledgeVault } from '../../../shared/types'
 import { COMMERCIAL_EDITION } from '../../../shared/edition'
-import { acknowledgeNoteRecovery, acknowledgeNoteSave, forgetNoteDraft, knowledgeError, listRecoverableNoteDrafts, NOTE_RECOVERED_EVENT, NOTE_SAVED_EVENT, noteDraftIsVolatile, readNoteDraft, writeNoteDraft, type NoteDraft, type NoteRecovered, type NoteSaved } from '../lib/knowledgeDraft'
+import { createKnowledgeLinkResolver, extractKnowledgeLinks, knowledgeBacklinks } from '../../../shared/knowledgeLinks'
+import { acknowledgeNoteRecovery, acknowledgeNoteSave, forgetNoteDraft, knowledgeError, listRecoverableNoteDrafts, NOTE_RECOVERED_EVENT, NOTE_SAVED_EVENT, noteDraftIsVolatile, noteDraftKey, readNoteDraft, writeNoteDraft, type NoteDraft, type NoteRecovered, type NoteSaved } from '../lib/knowledgeDraft'
+import { LearningCategoryBadge, LearningCategoryFilter, LearningCategorySelect } from '../components/LearningCategoryControl'
 import '../styles/knowledge-recovery.css'
 const recoveredTitle=(path:string)=>path.split(/[\\/]/).pop()!.replace(/\.md$/i,'')
 function Notebook(){
@@ -13,7 +15,9 @@ function Notebook(){
   const [selected,setSelected]=useState<KnowledgeNote|null>(null)
   const [recoveryPath,setRecoveryPath]=useState<string|null>(null)
   const [content,setContent]=useState(''),[query,setQuery]=useState(''),[title,setTitle]=useState('')
+  const [categoryFilter,setCategoryFilter]=useState<string|undefined>()
   const [discard,setDiscard]=useState(false)
+  const [noteAction,setNoteAction]=useState<'rename'|'delete'|null>(null),[renameTitle,setRenameTitle]=useState('')
   const [message,setMessage]=useState(''),[busy,setBusy]=useState(false),[saved,setSaved]=useState(true)
   const loadGeneration=useRef(0)
   const selectedRef=useRef(selected);selectedRef.current=selected
@@ -48,6 +52,7 @@ function Notebook(){
     return()=>{mounted.current=false;window.removeEventListener(NOTE_SAVED_EVENT,acknowledge);window.removeEventListener(NOTE_RECOVERED_EVENT,recovered)}
   },[])
   function open(note:KnowledgeNote,root=vault?.root){
+    setNoteAction(null)
     setRecoveryPath(null)
     let draft:NoteDraft|null=null
     try{draft=readNoteDraft(root!,note.path)}catch{}
@@ -61,7 +66,7 @@ function Notebook(){
       const draft=readNoteDraft(root,path)
       if(!draft){setMessage('这份草稿暂时无法读取，原始存储未改动。');return}
       setSelected({path,title:recoveredTitle(path),content:draft.content,revision:draft.revision,modifiedAt:0})
-      setRecoveryPath(path);setContent(draft.content);setSaved(false);setDiscard(false);setTitle((recoveredTitle(path)+'-恢复').slice(0,100))
+      setRecoveryPath(path);setContent(draft.content);setSaved(false);setDiscard(false);setNoteAction(null);setTitle((recoveredTitle(path)+'-恢复').slice(0,100))
       setMessage(noteDraftIsVolatile(root,path)?'已载入会话内草稿，请保持应用打开并另存为新笔记。':'')
     }catch(e){setMessage(knowledgeError(e))}
   }
@@ -108,53 +113,112 @@ function Notebook(){
         return
       }
       if(!mounted.current)return
-      setVault(v);setTitle('')
+      setVault(v);setTitle('');setCategoryFilter(undefined)
       if(copy&&currentRef.current.content!==content)setMessage('提交的内容已另存为新笔记；较新的输入仍保留在当前笔记中。')
       else{open(note,v.root);setMessage(copy?'当前内容已另存为新笔记。':'已新建笔记。')}
     }catch(e){if(mounted.current)setMessage(knowledgeError(e))}finally{operation.current=false;if(mounted.current)setBusy(false)}
   }
   async function choose(){try{const v=await window.api.knowledgeChoose();if(v){++loadGeneration.current;setVault(v);const missing=listRecoverableNoteDrafts(v.root,v.notes).paths;if(v.notes[0])open(v.notes[0],v.root);else if(missing[0])openRecovery(missing[0],v.root);else{setSelected(null);setRecoveryPath(null);setContent('')}setMessage('已连接个人知识库')}}catch(e){setMessage(knowledgeError(e))}}
+  async function changeCategory(categoryId:string|null){
+    if(!selected||!vault||recoveryPath||operation.current)return
+    const source=selected,root=vault.root
+    operation.current=true;setBusy(true)
+    try{
+      const note=await window.api.knowledgeSetCategory({path:source.path,revision:source.revision,expectedRoot:root,categoryId,expectedCategoryId:source.categoryId??null})
+      if(!mounted.current||currentRef.current.vault?.root!==root)return
+      setVault(v=>v?.root===root?{...v,notes:v.notes.map(n=>n.path===note.path?{...n,categoryId:note.categoryId}:n)}:v)
+      // Classification never replaces the current editor content or its draft revision.
+      setSelected(current=>current?.path===note.path?{...current,categoryId:note.categoryId}:current)
+      setMessage('笔记分类已保存；正文和本机草稿保持原样。')
+    }catch(e){if(mounted.current)setMessage(knowledgeError(e))}finally{operation.current=false;if(mounted.current)setBusy(false)}
+  }
+  async function changeNote(action:'rename'|'delete'){
+    if(!selected||!vault||recoveryPath||operation.current)return
+    const source=selected,root=vault.root
+    if(action==='rename'){
+      const name=renameTitle.trim().replace(/\.md$/i,'')
+      if(!name||name.length>100||/[<>:"/\\|?*\x00-\x1f]/.test(name)||/[. ]$/.test(name)||/^(con|prn|aux|nul|com[0-9]|lpt[0-9])(?:\.|$)/i.test(name)){setMessage('请使用有效的笔记标题（最多 100 字，不含路径或特殊符号）');return}
+      const targetPath=source.path.slice(0,source.path.lastIndexOf('/')+1)+name+'.md'
+      if(targetPath!==source.path){
+        try{
+          // A missing Markdown file may still own an older recoverable draft.
+          // Raw presence also protects malformed drafts that readNoteDraft cannot parse.
+          if(readNoteDraft(root,targetPath)||localStorage.getItem(noteDraftKey(root,targetPath))!==null){setMessage('这个标题的路径已有本机草稿，未改名。请先在“待恢复草稿”中另存或处理原草稿，或换一个标题。');return}
+        }catch{setMessage('无法安全读取目标标题的本机草稿，未改名。请先另存当前内容并检查待恢复草稿，或换一个标题。');return}
+      }
+    }
+    // Keep an unsaved editor copy before the physical file is renamed/deleted.
+    // A failed durable write still leaves knowledgeDraft's session fallback.
+    if(!saved)writeNoteDraft(root,source.path,{content,revision:source.revision})
+    operation.current=true;setBusy(true);setMessage('')
+    try{
+      if(action==='rename'){
+        const note=await window.api.knowledgeRename({path:source.path,revision:source.revision,expectedRoot:root,title:renameTitle})
+        let draft:NoteDraft|null=!saved?{content,revision:source.revision}:null,keptOld=false
+        try{draft=readNoteDraft(root,source.path)??draft}catch{keptOld=true}
+        if(draft&&note.path!==source.path){try{if(writeNoteDraft(root,note.path,{...draft,revision:note.revision})){forgetNoteDraft(root,source.path);keptOld=false}else keptOld=true}catch{keptOld=true}}
+        if(!mounted.current||currentRef.current.vault?.root!==root)return
+        setVault(v=>v?.root===root?{...v,notes:v.notes.map(n=>n.path===source.path?note:n)}:v)
+        open(note,root)
+        setMessage(keptOld?'已改名；草稿仍保留，旧路径草稿未清理，请保存后核对。':'标题与文件名已修改；正文未改动，其他笔记链接及复习卡来源路径需按需调整。')
+      }else{
+        await window.api.knowledgeDelete({path:source.path,revision:source.revision,expectedRoot:root,confirmation:'删除笔记'})
+        if(!mounted.current||currentRef.current.vault?.root!==root)return
+        const remaining=vault.notes.filter(n=>n.path!==source.path)
+        setVault(v=>v?.root===root?{...v,notes:v.notes.filter(n=>n.path!==source.path)}:v);setNoteAction(null)
+        let draft:NoteDraft|null=null;try{draft=readNoteDraft(root,source.path)}catch{}
+        if(draft)openRecovery(source.path,root)
+        else if(remaining[0])open(remaining[0],root)
+        else{setSelected(null);setRecoveryPath(null);setContent('');setSaved(true)}
+        setMessage(draft?'Markdown 文件已删除；未保存的正文保留在“待恢复草稿”，可以另存找回。':'Markdown 文件已删除；附件、其他笔记、复习卡与已导出的备份保留。')
+      }
+    }catch(e){if(mounted.current)setMessage(knowledgeError(e))}finally{operation.current=false;if(mounted.current)setBusy(false)}
+  }
   function makeReview(){
     if(!selected||!vault||recoveryPath)return
     try{
       if(readReviewDraft()){setMessage('复习页还有未完成的草稿，请先保存或放弃，再制作新的卡片。');return}
       const area=document.querySelector<HTMLTextAreaElement>('[aria-label="笔记正文"]')
       const excerpt=area&&area.selectionEnd>area.selectionStart?content.slice(area.selectionStart,area.selectionEnd):content
-      writeReviewDraft({...newReviewDraft(),question:`${selected.title}：需要记住的关键问题是什么？`.slice(0,500),answer:excerpt.slice(0,20000),sourceRoot:vault.root,sourcePath:selected.path})
+      writeReviewDraft({...newReviewDraft(),question:`${selected.title}：需要记住的关键问题是什么？`.slice(0,500),answer:excerpt.slice(0,20000),sourceRoot:vault.root,sourcePath:selected.path,categoryId:selected.categoryId??null})
       useApp.setState({knowledgeSection:'review'})
     }catch{setMessage('复习草稿写入失败，请到复习页手动创建卡片。')}
   }
   const notes=vault?.notes??[],needle=query.trim().toLowerCase()
   const recoveryScan=useMemo(()=>vault?listRecoverableNoteDrafts(vault.root,vault.notes):{paths:[],unreadable:0},[vault])
-  const filtered=notes.filter(n=>(n.title+'\n'+n.content).toLowerCase().includes(needle))
-  const links=[...new Set(Array.from(content.matchAll(/\[\[([^\]]+)\]\]/g),m=>m[1].split('|')[0].split('#')[0]))].filter(Boolean)
-  const resolveLink=(link:string)=>{const key=link.replace(/\.md$/i,'');const direct=notes.find(n=>n.path.replace(/\.md$/i,'')===key);if(direct)return direct;const matches=notes.filter(n=>n.title===key);return matches.length===1?matches[0]:undefined}
-  const backlinks=selected?notes.filter(n=>n.path!==selected.path&&Array.from(n.content.matchAll(/\[\[([^\]]+)\]\]/g),m=>m[1].split('|')[0].split('#')[0].replace(/\.md$/i,'')).some(link=>link===selected.title||link===selected.path.replace(/\.md$/i,''))):[]
+  const filtered=notes.filter(n=>(categoryFilter===undefined||(n.categoryId??'')===categoryFilter)&&(n.title+'\n'+n.content).toLowerCase().includes(needle))
+  const links=extractKnowledgeLinks(content)
+  const resolveLink=useMemo(()=>createKnowledgeLinkResolver(notes),[notes])
+  const backlinks=useMemo(()=>knowledgeBacklinks(notes,selected?.path),[notes,selected?.path])
   return <div className="knowledge-page">
     <div className="page-title"><span className="en">MY LIBRARY</span><span className="zh">个人知识库</span></div>
     <div className="knowledge-toolbar"><span title={vault?.root}>{vault?.root||'正在打开学习库…'}</span><button className="btn" onClick={()=>void choose()} disabled={busy}>选择已有库</button><button className="btn" onClick={()=>void window.api.knowledgeFolder().then(error=>{if(error)setMessage(error)}).catch(e=>setMessage(String(e)))}>{commercialAndroid?'文件夹说明':'打开文件夹'}</button><button className="btn" onClick={()=>void window.api.knowledgeObsidian().catch(error=>setMessage(commercialAndroid?(error instanceof Error?error.message:String(error)):'请先安装 Obsidian，也可以在其中打开上面的文件夹。'))}>{commercialAndroid?'打开 Obsidian':'在 Obsidian 打开'}</button></div>
-    {COMMERCIAL_EDITION&&message&&<div className="knowledge-message" role="status">{message}</div>}
+    {message&&<div className="knowledge-message" role="status">{message}</div>}
     <div className="knowledge-columns">
-      <aside className="glass knowledge-sidebar"><input aria-label="搜索笔记" placeholder="搜索标题或全文…" value={query} onChange={e=>setQuery(e.target.value)}/><div className="knowledge-new"><input aria-label="新笔记标题" placeholder="新笔记标题" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')void create(Boolean(recoveryPath))}}/><button className="btn" disabled={busy||!title.trim()} onClick={()=>void create(Boolean(recoveryPath))}>{recoveryPath?'恢复':'新建'}</button></div>
+      <aside className="glass knowledge-sidebar"><input aria-label="搜索笔记" placeholder="搜索标题或全文…" value={query} onChange={e=>setQuery(e.target.value)}/><LearningCategoryFilter value={categoryFilter} onChange={setCategoryFilter} label="筛选笔记分类"/><div className="knowledge-new"><input aria-label="新笔记标题" placeholder="新笔记标题" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')void create(Boolean(recoveryPath))}}/><button className="btn" disabled={busy||!title.trim()} onClick={()=>void create(Boolean(recoveryPath))}>{recoveryPath?'恢复':'新建'}</button></div>
         {(recoveryScan.paths.length>0||recoveryScan.unreadable>0)&&<section className="knowledge-recovery" aria-label="待恢复草稿">
           <header><strong>待恢复草稿</strong><span>{recoveryScan.paths.length}</span></header>
           <p>原路径未出现在当前列表中，可找回正文并另存。</p>
           <div className="knowledge-recovery-list">{recoveryScan.paths.filter(path=>path.toLowerCase().includes(needle)).map(path=><button key={path} disabled={busy} className={recoveryPath===path?'selected':''} onClick={()=>openRecovery(path)} title={path}><strong>{recoveredTitle(path)}</strong><small>{path}</small></button>)}</div>
           {recoveryScan.unreadable>0&&<small role="status">有 {recoveryScan.unreadable} 项草稿暂时无法读取，原始存储已保留。</small>}
         </section>}
-        <small>{filtered.length} 篇笔记{vault?.skipped?` · ${vault.skipped} 项超出读取范围`:''}</small>
-        <div className="knowledge-list">{filtered.map(note=><button key={note.path} disabled={busy} className={note.path===selected?.path?'selected':''} onClick={()=>open(note)}><strong>{note.title}</strong><small>{note.path}</small><p>{note.content.replace(/^#.*\n/,'').trim().slice(0,65)||'开始记录你的理解…'}</p></button>)}</div>
+        <small>{filtered.length} 篇笔记{vault?.skipped?` · ${vault.skipped} 项超出读取范围（最多载入 2000 篇；深层目录、大文件另计）`:''}</small>
+        <div className="knowledge-list">{filtered.map(note=><button key={note.path} disabled={busy} className={note.path===selected?.path?'selected':''} onClick={()=>open(note)}><strong>{note.title}</strong><small>{note.path}</small><LearningCategoryBadge id={note.categoryId??null}/><p>{note.content.replace(/^#.*\n/,'').trim().slice(0,65)||'开始记录你的理解…'}</p></button>)}</div>
       </aside>
       <section className="glass knowledge-editor">{selected?<>
-        <header><div><h2>{selected.title}</h2><small>{saved?'已写入文件':vault&&noteDraftIsVolatile(vault.root,selected.path)?'草稿仅在本次会话中，请保存':'草稿已保留在本机'} · Ctrl+S {recoveryPath?'另存恢复':'保存'}</small></div><button className="btn primary" disabled={busy||saved||Boolean(recoveryPath&&!title.trim())} onClick={()=>void save()}>{busy?'保存中…':recoveryPath?'另存恢复':'保存笔记'}</button></header>
+        <header><div><h2>{selected.title}</h2><small>{saved?'已写入文件':vault&&noteDraftIsVolatile(vault.root,selected.path)?'草稿仅在本次会话中，请保存':'草稿已保留在本机'} · Ctrl+S {recoveryPath?'另存恢复':'保存'}</small></div><button className="btn primary" disabled={busy||saved||Boolean(recoveryPath&&!title.trim())} onClick={()=>void save()}>{busy?(noteAction?'处理中…':'保存中…'):recoveryPath?'另存恢复':'保存笔记'}</button>{!recoveryPath&&<><button className="btn" disabled={busy} onClick={()=>{setRenameTitle(selected.title);setNoteAction('rename')}}>修改标题</button><button className="btn" disabled={busy} onClick={()=>setNoteAction('delete')}>删除笔记</button></>}</header>
+        {!recoveryPath&&<div className="knowledge-category"><LearningCategorySelect value={selected.categoryId??null} onChange={categoryId=>void changeCategory(categoryId)} disabled={busy} label="笔记分类"/><small>分类跟随本应用内改名，并随当前库的完整备份迁移。外部改名后需重新分类。</small></div>}
+        {noteAction&&<section className="knowledge-recovery-hint" role="dialog" aria-label={noteAction==='rename'?'修改笔记标题':'确认删除笔记'}>
+          {noteAction==='rename'?<><strong>修改标题与 Markdown 文件名</strong><input aria-label="修改后的笔记标题" maxLength={100} value={renameTitle} disabled={busy} onChange={e=>setRenameTitle(e.target.value)}/><small>保留正文与未保存草稿，不覆盖同名文件。其他笔记链接及复习卡来源路径不会自动修改。</small></>:<><strong>删除“{selected.title}”？</strong><small>会永久删除当前知识库中的这一个 Markdown 文件，附件、其他笔记和复习卡保留。已有备份不受影响。{!saved?'未保存正文将保留在“待恢复草稿”，存储失败时仅保留于当前会话，请保持应用打开。':'此操作不能直接撤销。'}</small></>}
+          <div><button className="btn primary" disabled={busy||(noteAction==='rename'&&!renameTitle.trim())} onClick={()=>void changeNote(noteAction)}>{busy?'处理中…':noteAction==='rename'?'确认修改标题':'确认删除 Markdown'}</button><button className="btn" disabled={busy} onClick={()=>setNoteAction(null)}>取消</button></div>
+        </section>}
         {recoveryPath&&<div className="knowledge-recovery-hint"><strong>正在找回草稿</strong><span>原路径：{recoveryPath}</span><small>用左侧标题另存到当前库的顶层，确认正文完整后清理这份旧草稿。</small></div>}
-        <textarea aria-label="笔记正文" spellCheck={false} value={content} onChange={e=>edit(e.target.value)} placeholder="记下知识点、错题和自己的理解。使用 [[笔记标题]] 关联另一篇笔记。" />
+        <textarea aria-label="笔记正文" spellCheck={false} disabled={busy&&Boolean(noteAction)} value={content} onChange={e=>edit(e.target.value)} placeholder="记下知识点、错题和自己的理解。使用 [[笔记标题]] 关联另一篇笔记。" />
         <div className="knowledge-relations"><span>关联笔记</span>{links.map(link=>{const note=resolveLink(link);return <button disabled={busy||!note} key={link} onClick={()=>note&&open(note)}>{link}{!note?'（未找到或重名）':''}</button>})}{!links.length&&<small>用 [[笔记标题]] 建立关联</small>}</div>
         <div className="knowledge-relations"><span>链接到这里</span>{backlinks.map(note=><button key={note.path} disabled={busy} onClick={()=>open(note)}>{note.title}</button>)}{!backlinks.length&&<small>暂时没有反向链接</small>}</div>
-        <footer><button className="btn primary" disabled={busy||!content.trim()||Boolean(recoveryPath)} onClick={makeReview}>制作复习卡</button>{!saved&&<button className="btn" disabled={busy} onClick={discardDraft}>{discard?(recoveryPath?'确认丢弃这份草稿':'确认丢弃草稿并载入文件'):(recoveryPath?'放弃此草稿':'放弃本机草稿')}</button>}<button className="btn" onClick={()=>void refresh()} disabled={busy}>刷新外部修改</button><button className="btn" onClick={()=>void create(true)} disabled={busy||!title.trim()}>以左侧标题另存</button><button className="btn" onClick={()=>{sessionStorage.setItem('focusNoteTitle',selected.title);useApp.getState().go('focus')}}>围绕此笔记专注</button></footer>
+        <footer><button className="btn primary" disabled={busy||!content.trim()||Boolean(recoveryPath)} onClick={makeReview}>制作复习卡</button>{!saved&&<button className="btn" disabled={busy} onClick={discardDraft}>{discard?(recoveryPath?'确认丢弃这份草稿':'确认丢弃草稿并载入文件'):(recoveryPath?'放弃此草稿':'放弃本机草稿')}</button>}<button className="btn" onClick={()=>void refresh()} disabled={busy}>刷新外部修改</button><button className="btn" onClick={()=>void create(true)} disabled={busy||!title.trim()}>以左侧标题另存</button><button className="btn" onClick={()=>{sessionStorage.setItem('focusNoteTitle',selected.title);if(selected.categoryId)sessionStorage.setItem('focusNoteCategory',selected.categoryId);else sessionStorage.removeItem('focusNoteCategory');useApp.getState().go('focus')}}>围绕此笔记专注</button></footer>
       </>:<div className="knowledge-empty"><span>YOUR OWN WORDS</span><h2>把学到的，变成自己的。</h2><p>在左侧新建知识点、错题或阅读笔记。也可以选择已有 Obsidian 仓库，直接使用其中的 Markdown 文件。</p><p>笔记不会因创建或编辑自动获得成长点数。</p></div>}</section>
     </div>
-    {!COMMERCIAL_EDITION&&message&&<div className="knowledge-message" role="status">{message}</div>}
   </div>
 }
 

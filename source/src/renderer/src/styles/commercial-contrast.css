@@ -1,0 +1,93 @@
+/* Commercial text roles and protected reading surfaces. Saved accent, media,
+   artwork and the user-controlled glass/dimming values are not rewritten. */
+html.commercial-edition,
+html.commercial-edition .study-shell {
+  --text-surface: color-mix(in srgb, var(--theme-panel) calc(var(--text-surface-alpha) * 100%), transparent);
+}
+
+html.commercial-edition .study-shell .desk-content {
+  isolation: isolate;
+}
+html.commercial-edition .study-shell .desk-content::before {
+  content: '';
+  position: absolute;
+  inset: -18px -22px;
+  z-index: -1;
+  border: 1px solid #ffffff18;
+  border-radius: 18px;
+  background: linear-gradient(115deg, color-mix(in srgb, var(--theme-panel) 92%, transparent), var(--text-surface));
+  backdrop-filter: blur(var(--panel-blur, 4px));
+  box-shadow: 0 12px 36px #0002;
+  pointer-events: none;
+}
+html.commercial-edition .study-shell .desk-growth-strip,
+html.commercial-edition .study-shell .window-bar,
+html.commercial-edition .study-shell .command-nav,
+html.commercial-edition .study-shell .music-shell {
+  background: color-mix(in srgb, var(--theme-panel) calc((var(--text-surface-alpha) + var(--panel-alpha, .58) * .15) * 100%), transparent);
+}
+html.commercial-edition .study-shell .minimal-clock,
+html.commercial-edition .study-shell .floating-clock {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--theme-panel) 92%, transparent), var(--text-surface));
+}
+html.commercial-edition .study-shell .desk-date { isolation: isolate; }
+html.commercial-edition .study-shell .desk-date::before {
+  content: '';
+  position: absolute;
+  inset: -8px -12px;
+  z-index: -1;
+  border-radius: 14px;
+  background: var(--text-surface);
+  pointer-events: none;
+}
+/* Apply text colors only where the surface above (or the 85% player card)
+   provides the known backdrop. Glass panels keep their original palette. */
+html.commercial-edition .study-shell :is(
+  .minimal-clock > span, .compact-player-track > small, .compact-player-library,
+  .desk-kicker, .desk-clock > span, .desk-clock small, .next-focus-top > span,
+  .next-focus-top small, .next-focus-bottom > span, .desk-links button,
+  .desk-section-title h2, .desk-section-title button, .desk-agenda time,
+  .desk-empty button, .desk-today > div:last-child button, .home-last-session,
+  .growth-strip-label > span, .growth-strip-name, .growth-strip-name small,
+  .desk-growth-strip > button, .command-item:not(.is-active) .command-num,
+  .desk-date .date-slash, .desk-date small, .floating-clock small, .floating-clock > span,
+  .music-overline
+) {
+  color: var(--readable-accent);
+}
+html.commercial-edition .study-shell :is(
+  .minimal-clock > small, .desk-subtitle, .desk-links button small,
+  .desk-content .tiny-label, .desk-empty, .desk-today button > span,
+  .command-item:not(.is-active), .window-brand > span:last-child, .window-controls button,
+  .music-shell .music-timeline span, .music-shell .music-volume,
+  .music-shell .music-list-toggle, .music-shell .music-list-toggle span
+) { color: var(--readable-muted); }
+/* Filled controls have their own foreground/background pair; text roles do
+   not recolor decorative progress bars, sliders or arbitrary glass panels. */
+html.commercial-edition .study-shell :is(.desk-start, .section-index, .command-item.is-active, .music-shell .music-play) {
+  background: var(--control-fill);
+  color: var(--control-ink);
+}
+html.commercial-edition .study-shell .command-item.is-active .command-num { color: var(--control-ink); }
+html.commercial-edition .study-shell.ui-hidden .floating-clock.timer-center {
+  padding: 20px 28px;
+  border-radius: 20px;
+  gap: 12px;
+}
+html.commercial-edition .study-shell.ui-hidden .floating-clock.timer-center > small,
+html.commercial-edition .study-shell.ui-hidden .floating-clock.timer-center > span {
+  position: static;
+  margin: 0;
+  width: auto;
+}
+html.commercial-edition .study-shell .minimal-clock > span,
+html.commercial-edition .study-shell .compact-player-track > small {
+  font-size: 9px;
+  font-weight: 600;
+}
+@media (max-width: 700px) {
+  html.commercial-edition .study-shell .desk-content::before {
+    inset: -12px -10px;
+    border-radius: 12px;
+  }
+}

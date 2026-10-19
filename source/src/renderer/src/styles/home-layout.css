@@ -1,0 +1,17 @@
+/* Editor controls only: no default desk geometry, type or surfaces are changed. */
+.home-layout-toolbar{position:relative;display:inline-flex;align-items:center;align-self:center;height:0;gap:12px;margin-left:4px;z-index:28;pointer-events:auto;letter-spacing:normal;flex-shrink:0}
+.home-layout-toolbar button{min-height:32px;padding:4px 0;border:0;background:transparent;color:var(--theme-pale);font-size:12px;cursor:pointer;white-space:nowrap}
+.home-layout-toolbar button:hover{color:var(--theme-light)}
+.home-layout-toolbar .home-layout-edit{width:28px;display:grid;place-items:center;opacity:.65}
+.home-layout-toolbar .home-layout-edit:hover,.home-layout-toolbar .home-layout-edit:focus-visible{opacity:1}
+.home-layout-toolbar .home-layout-done{color:var(--theme-light);font-weight:600}
+.home-layout-help{position:absolute;right:0;top:100%;width:240px;padding:10px 12px;margin-top:7px;background:var(--theme-panel);color:var(--theme-pale);font-size:11px;line-height:1.7;border:1px solid var(--theme-line);border-radius:4px;pointer-events:none}
+.home-layout-error{position:absolute;right:0;top:100%;margin-top:8px;padding:12px;width:270px;background:var(--theme-panel);color:#ffd3d8;border:1px solid #e88898;font-size:12px}
+.home-free-overlay{position:absolute;inset:0;pointer-events:none;z-index:20}
+.home-free-outline{position:absolute;outline:1px dashed var(--theme-light);outline-offset:3px;pointer-events:none}
+.home-free-move,.home-free-resize{position:absolute;pointer-events:auto;touch-action:none;user-select:none;border:1px solid var(--theme-light);background:var(--theme-panel);color:var(--theme-pale);font-size:12px;min-height:34px;cursor:grab}
+.home-free-move{left:0;top:0;transform:translateY(-100%);padding:4px 10px;display:flex;align-items:center;gap:7px;max-width:100%;white-space:nowrap}
+.home-free-move:active{cursor:grabbing}
+.home-free-resize{right:-4px;bottom:-4px;width:38px;height:38px;font-size:22px;cursor:nwse-resize}
+.home-layout-toolbar button:focus-visible,.home-free-move:focus-visible,.home-free-resize:focus-visible{outline:2px solid white;outline-offset:2px}
+@media(max-width:700px){.home-layout-toolbar{gap:8px}.home-layout-toolbar button{font-size:11px}}

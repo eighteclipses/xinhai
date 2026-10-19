@@ -37,7 +37,7 @@ export function captureDatabaseSnapshot(db:Database.Database,clientState:Record<
     settings.llmKey='';settings.llmEndpoint='';settings.llmModel=''
     tables.settings[0].json=JSON.stringify(settings)
     const sequences=Object.fromEntries((db.prepare('SELECT name,seq FROM sqlite_sequence').all() as Array<{name:string;seq:number}>).filter(r=>BACKUP_SEQUENCES.includes(r.name as never)).map(r=>[r.name,r.seq]))
-    return parseDatabaseSnapshot(JSON.stringify({format:'xinhai-database-snapshot',version:1,createdAt:Date.now(),tables,sequences,clientState}))
+    return parseDatabaseSnapshot(JSON.stringify({format:'xinhai-database-snapshot',version:3,createdAt:Date.now(),tables,sequences,clientState}))
   })()
 }
 
@@ -56,6 +56,8 @@ export function replaceDatabaseFromSnapshot(db:Database.Database,value:unknown,r
   const current=JSON.parse(String((db.prepare('SELECT json FROM settings WHERE id=1').get() as BackupRow).json))
   const settings=JSON.parse(String(tables.settings[0].json))
   for(const key of ['llmKey','llmEndpoint','llmModel'])settings[key]=current[key]??DEFAULT_SETTINGS[key as keyof typeof DEFAULT_SETTINGS]
+  const oldKnowledgeRoot=settings.knowledgePath
+  for(const row of tables.local_knowledge_categories)if(row.root===oldKnowledgeRoot)row.root=resources.knowledgeRoot
   settings.knowledgePath=resources.knowledgeRoot;tables.settings[0].json=JSON.stringify(settings)
   db.transaction(()=>{
     for(const table of BACKUP_TABLES)db.prepare(`DELETE FROM ${table}`).run()

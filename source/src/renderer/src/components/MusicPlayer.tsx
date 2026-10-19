@@ -1,6 +1,7 @@
 import {readMusicResume} from '../lib/musicResume'
 import NetEaseLibrary from './NetEaseLibrary'
-import { ONLINE_MUSIC_ENABLED } from '../../../shared/edition'
+import { ONLINE_MUSIC_ENABLED, PERSONAL_EDITION } from '../../../shared/edition'
+import { createMarchMusicCue } from '../lib/anniversaryMusic'
 import PortablePlayer from './PortablePlayer'
 import CompactPlayer from './CompactPlayer'
 import { useEffect, useRef, useState } from 'react'
@@ -9,6 +10,7 @@ import { useApp } from '../store/app'
 import { bgm,type PlaybackState } from '../lib/bgm'
 import {useMusicPanelPosition} from '../lib/useMusicPanelPosition'
 const MODES:Record<PlayMode,string>={seq:'顺序',loop:'单曲',random:'随机'}
+const claimMarchMusic = createMarchMusicCue(PERSONAL_EDITION)
 const clock=(seconds:number)=>`${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`
 export default function MusicPlayer({wallpaper=false}:{wallpaper?:boolean}){
  const playerStyle=useApp(s=>s.settings.playerStyle)
@@ -30,15 +32,28 @@ export default function MusicPlayer({wallpaper=false}:{wallpaper?:boolean}){
   const unsubscribe=useMusic.subscribe((s,previous)=>{if(s.playing!==previous.playing||s.tracks[s.index]?.file!==previous.tracks[previous.index]?.file||s.musicVolume!==previous.musicVolume)sync()})
   sync()
   const resume=readMusicResume()
+  const playAnniversary=()=>{
+   const index=claimMarchMusic(st().tracks)
+   if(index<0)return false
+   st().play(index)
+   bgm.seek(0)
+   return true
+  }
+  const foreground=()=>{if(!cancelled&&!document.hidden)void st().load().then(()=>{if(!cancelled)playAnniversary()})}
+  window.addEventListener('focus',foreground)
+  document.addEventListener('visibilitychange',foreground)
   void st().load().then(()=>{
    if(cancelled)return
+   // March 5 intentionally starts the requested song before the usual resume
+   // policy. Once claimed, manual pause/selection stays in the listener's hands.
+   if(playAnniversary())return
    const track=st().tracks[st().index];if(!track)return
    if(resume?.file===track.file){
     bgm.play(track.file,resume.seconds,resume.playing)
     useMusic.setState({playing:resume.playing})
    }else if(useApp.getState().settings.autoPlayMusic)st().play()
   })
-  return()=>{cancelled=true;unsubscribe();bgm.setOnEnd(null);bgm.setOnFail(null);bgm.setOnState(null);bgm.setOnTime(null);bgm.dispose()}
+  return()=>{cancelled=true;window.removeEventListener('focus',foreground);document.removeEventListener('visibilitychange',foreground);unsubscribe();bgm.setOnEnd(null);bgm.setOnFail(null);bgm.setOnState(null);bgm.setOnTime(null);bgm.dispose()}
  },[])
  useEffect(()=>{
   if(!open)return

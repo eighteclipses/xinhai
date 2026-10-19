@@ -32,7 +32,8 @@ public final class SqlBridgePolicy {
     private static final Set<String> TABLES;
     private static final Set<String> BACKUP_TABLES;
     private static final Set<String> RUN_CLEAR_TABLES = set("STATS", "GROWTH_EVENTS", "FOCUS_SESSIONS", "JOURNALS", "SETTINGS", "TODOS", "HABITS", "HABIT_LOGS", "EVENTS", "FOCUS_COMMITS", "JOURNAL_COMMITS", "GROWTH_META", "GROWTH_RESETS", "REVIEW_CARDS", "REVIEW_LOGS", "MUSIC_IMPORTS", "FOCUS_RECOVERY", "SYNC_META", "SYNC_ROWS", "SYNC_CONFLICTS", "SYNC_BACKUPS");
-    private static final Set<String> SYNC_BUSINESS_TABLES = set("HABITS", "TODOS", "FOCUS_SESSIONS", "JOURNALS", "EVENTS", "REVIEW_CARDS", "HABIT_LOGS", "REVIEW_LOGS", "GROWTH_EVENTS");
+    private static final Set<String> SYNC_BUSINESS_TABLES = set("HABITS", "TODOS", "FOCUS_SESSIONS", "JOURNALS", "EVENTS", "REVIEW_CARDS", "HABIT_LOGS", "REVIEW_LOGS", "GROWTH_EVENTS", "LEARNING_CATEGORIES", "FOCUS_REWARD_SESSIONS", "FOCUS_REWARD_BLOCKS", "FOCUS_REWARD_PRESENTATIONS");
+    private static final Set<String> CATEGORY_TABLES = set("FOCUS_SESSIONS", "JOURNALS", "TODOS", "HABITS", "HABIT_LOGS", "EVENTS", "REVIEW_CARDS", "REVIEW_LOGS");
     private static final Set<String> EXEC_CLEAR_TABLES = set("FOCUS_SESSIONS", "JOURNALS", "HABIT_LOGS", "TODOS", "REVIEW_CARDS", "REVIEW_LOGS");
     private static final Map<String, Set<String>> COLUMNS;
     private static final Map<String, Set<String>> INSERT_COLUMNS;
@@ -48,12 +49,16 @@ public final class SqlBridgePolicy {
                 "FOCUS_RECOVERY", "PENDING_CLIENT_RESTORE", "DEVICE_RESOURCES",
                 "SYNC_META", "SYNC_ROWS", "SYNC_CONFLICTS", "SYNC_BACKUPS",
                 "SQLITE_SEQUENCE"));
+        tables.addAll(Arrays.asList("LEARNING_CATEGORIES", "LOCAL_KNOWLEDGE_CATEGORIES"));
+        tables.addAll(Arrays.asList("FOCUS_REWARD_SESSIONS", "FOCUS_REWARD_BLOCKS", "FOCUS_REWARD_PRESENTATIONS"));
         TABLES = Collections.unmodifiableSet(tables);
         Set<String> backups = new HashSet<>(Arrays.asList(
                 "STATS", "GROWTH_EVENTS", "FOCUS_SESSIONS", "JOURNALS", "SETTINGS",
                 "TODOS", "HABITS", "HABIT_LOGS", "EVENTS", "FOCUS_COMMITS",
                 "JOURNAL_COMMITS", "GROWTH_META", "GROWTH_RESETS", "REVIEW_CARDS",
                 "REVIEW_LOGS", "MUSIC_IMPORTS", "FOCUS_RECOVERY"));
+        backups.addAll(Arrays.asList("LEARNING_CATEGORIES", "LOCAL_KNOWLEDGE_CATEGORIES"));
+        backups.addAll(Arrays.asList("FOCUS_REWARD_SESSIONS", "FOCUS_REWARD_BLOCKS", "FOCUS_REWARD_PRESENTATIONS"));
         BACKUP_TABLES = Collections.unmodifiableSet(backups);
 
         Map<String, Set<String>> columns = new HashMap<>();
@@ -82,6 +87,12 @@ public final class SqlBridgePolicy {
         columns.put("SYNC_CONFLICTS", set("ID", "DETAIL"));
         columns.put("SYNC_BACKUPS", set("ID", "TS", "BODY"));
         columns.put("SQLITE_SEQUENCE", set("NAME", "SEQ"));
+        for(String table:CATEGORY_TABLES)columns.get(table).add("CATEGORY_ID");
+        columns.put("LEARNING_CATEGORIES",set("ID","NAME","COLOR","SORT_ORDER","ARCHIVED_AT","CREATED_AT","UPDATED_AT"));
+        columns.put("LOCAL_KNOWLEDGE_CATEGORIES",set("ROOT","PATH","CATEGORY_ID"));
+        columns.put("FOCUS_REWARD_SESSIONS",set("TOKEN","SECONDS","ENDED_AT"));
+        columns.put("FOCUS_REWARD_BLOCKS",set("ID","TS"));
+        columns.put("FOCUS_REWARD_PRESENTATIONS",set("TOKEN","BLOCK_IDS","SESSION_TOKENS","TS","ACKNOWLEDGED"));
         COLUMNS = Collections.unmodifiableMap(columns);
 
         Map<String, Set<String>> inserts = new HashMap<>();
@@ -123,6 +134,13 @@ public final class SqlBridgePolicy {
         insert(inserts, "SYNC_BACKUPS", "TS,BODY");
         insert(inserts, "SYNC_BACKUPS", "ID,TS,BODY");
         insert(inserts, "SQLITE_SEQUENCE", "NAME,SEQ");
+        for(String table:CATEGORY_TABLES)for(String shape:new HashSet<>(inserts.get(table)))insert(inserts,table,shape+",CATEGORY_ID");
+        insert(inserts,"LEARNING_CATEGORIES","ID,NAME,COLOR,SORT_ORDER,ARCHIVED_AT,CREATED_AT,UPDATED_AT");
+        insert(inserts,"LOCAL_KNOWLEDGE_CATEGORIES","ROOT,PATH,CATEGORY_ID");
+        insert(inserts,"FOCUS_REWARD_SESSIONS","TOKEN,SECONDS,ENDED_AT");
+        insert(inserts,"FOCUS_REWARD_BLOCKS","ID,TS");
+        insert(inserts,"FOCUS_REWARD_PRESENTATIONS","TOKEN,BLOCK_IDS,SESSION_TOKENS,TS,ACKNOWLEDGED");
+        insert(inserts,"REVIEW_CARDS","ID,CATEGORY_ID,QUESTION,ANSWER,TOPIC,SOURCEPATH,DUEDATE,INTERVALDAYS,REVIEWS,ARCHIVED,CREATEDAT,UPDATEDAT");
         INSERT_COLUMNS = Collections.unmodifiableMap(inserts);
 
         Collections.addAll(DDL_PATTERNS,
@@ -161,8 +179,16 @@ public final class SqlBridgePolicy {
                 "ALTER TABLE PENDING_CLIENT_RESTORE ADD COLUMN TOKEN TEXT NOT NULL DEFAULT ''");
 
         Collections.addAll(EXACT_QUERIES,
+                "SELECT COUNT(*) AS N FROM JOURNALS",
+                "SELECT COUNT(*) AS N FROM JOURNALS WHERE ? = '' OR INSTR(LOWER(CONTENT),LOWER(?)) > 0 OR INSTR(LOWER(SUMMARY),LOWER(?)) > 0",
+                "SELECT * FROM JOURNALS WHERE (? = '' OR INSTR(LOWER(CONTENT),LOWER(?)) > 0 OR INSTR(LOWER(SUMMARY),LOWER(?)) > 0) ORDER BY TS DESC, ID DESC LIMIT ?",
+                "SELECT * FROM JOURNALS WHERE (? = '' OR INSTR(LOWER(CONTENT),LOWER(?)) > 0 OR INSTR(LOWER(SUMMARY),LOWER(?)) > 0) AND (TS < ? OR (TS = ? AND ID < ?)) ORDER BY TS DESC, ID DESC LIMIT ?",
+                "SELECT * FROM GROWTH_EVENTS WHERE DIMENSION=? ORDER BY TS DESC,ID DESC LIMIT 5",
+                "SELECT DISTINCT DIMENSION FROM GROWTH_EVENTS WHERE TS >= ? AND TS <= ?",
+                "SELECT COUNT(*) AS N,COALESCE(MAX(POINTS),0) AS MAXPOINTS FROM GROWTH_EVENTS WHERE TS >= ? AND TS < ?",
                 "SELECT L.HABIT_ID,L.DATE FROM HABIT_LOGS L JOIN HABITS H ON H.ID=L.HABIT_ID WHERE H.DIMENSION=? AND ? = ? || H.NAME AND ABS(L.TS-?)<2000 ORDER BY ABS(L.TS-?) LIMIT 1",
                 "SELECT DIMENSION,SUM(POINTS) N FROM GROWTH_EVENTS GROUP BY DIMENSION",
+                "SELECT TASK_LABEL AS TASKLABEL, COUNT(*) AS SESSIONCOUNT, SUM(COALESCE(SECONDS, MINUTES * 60)) AS SECONDS, SUM(CASE WHEN SECONDS IS NULL THEN 1 ELSE 0 END) AS LEGACYSESSIONCOUNT, MAX(ENDED_AT) AS LASTENDEDAT FROM FOCUS_SESSIONS GROUP BY TASK_LABEL",
                 "SELECT DOC_JSON FROM SYNC_ROWS WHERE TABLE_NAME='BALANCES'",
                 "SELECT COALESCE(SUM(COALESCE(SECONDS, MINUTES * 60)), 0) AS TOTAL FROM FOCUS_SESSIONS WHERE ENDED_AT >= ? AND ENDED_AT < ?",
                 "SELECT L.*, H.NAME FROM HABIT_LOGS L LEFT JOIN HABITS H ON L.HABIT_ID=H.ID WHERE L.DATE LIKE ? ORDER BY L.TS",
@@ -191,6 +217,24 @@ public final class SqlBridgePolicy {
                 "SELECT 1 FROM FOCUS_COMMITS WHERE TOKEN=? LIMIT 1",
                 "INSERT OR IGNORE INTO MUSIC_IMPORTS VALUES (?,?,?,?)",
                 "INSERT INTO REVIEW_LOGS VALUES (?,?,?,?,?,?,?)");
+        DDL_PATTERNS.add(Pattern.quote("CREATE TABLE IF NOT EXISTS LEARNING_CATEGORIES (ID TEXT PRIMARY KEY,NAME TEXT NOT NULL,COLOR TEXT NOT NULL,SORT_ORDER INTEGER NOT NULL DEFAULT 0,ARCHIVED_AT INTEGER,CREATED_AT INTEGER NOT NULL,UPDATED_AT INTEGER NOT NULL)"));
+        DDL_PATTERNS.add(Pattern.quote("CREATE TABLE IF NOT EXISTS LOCAL_KNOWLEDGE_CATEGORIES (ROOT TEXT NOT NULL,PATH TEXT NOT NULL,CATEGORY_ID TEXT NOT NULL,PRIMARY KEY(ROOT,PATH))"));
+        DDL_PATTERNS.add(Pattern.quote("CREATE TABLE IF NOT EXISTS FOCUS_REWARD_SESSIONS(TOKEN TEXT PRIMARY KEY,SECONDS INTEGER NOT NULL,ENDED_AT INTEGER NOT NULL)"));
+        DDL_PATTERNS.add(Pattern.quote("CREATE TABLE IF NOT EXISTS FOCUS_REWARD_BLOCKS(ID TEXT PRIMARY KEY,TS INTEGER NOT NULL)"));
+        DDL_PATTERNS.add(Pattern.quote("CREATE TABLE IF NOT EXISTS FOCUS_REWARD_PRESENTATIONS(TOKEN TEXT PRIMARY KEY,BLOCK_IDS TEXT NOT NULL,SESSION_TOKENS TEXT NOT NULL,TS INTEGER NOT NULL,ACKNOWLEDGED INTEGER NOT NULL DEFAULT 0)"));
+        EXACT_QUERIES.add("SELECT COALESCE(SUM(SECONDS),0) AS N FROM FOCUS_REWARD_SESSIONS");
+        for(String table:CATEGORY_TABLES){
+            DDL_PATTERNS.add(Pattern.quote("ALTER TABLE "+table+" ADD COLUMN CATEGORY_ID TEXT"));
+            DDL_PATTERNS.add(Pattern.quote("CREATE INDEX IF NOT EXISTS "+table+"_CATEGORY ON "+table+"(CATEGORY_ID)"));
+        }
+        EXACT_QUERIES.add("SELECT CATEGORY_ID,COUNT(*) AS N,SUM(COALESCE(SECONDS,MINUTES*60)) AS SECONDS,SUM(CASE WHEN SECONDS IS NULL THEN 1 ELSE 0 END) AS LEGACY FROM FOCUS_SESSIONS GROUP BY CATEGORY_ID");
+        for(String table:CATEGORY_TABLES)EXACT_QUERIES.add("SELECT CATEGORY_ID,COUNT(*) AS N FROM "+table+" GROUP BY CATEGORY_ID");
+        EXACT_QUERIES.add("SELECT CATEGORY_ID,COUNT(*) AS N FROM TODOS WHERE DONE=1 GROUP BY CATEGORY_ID");
+        EXACT_QUERIES.add("SELECT CATEGORY_ID,COUNT(*) AS N FROM HABITS WHERE DELETED_AT IS NULL GROUP BY CATEGORY_ID");
+        String journalSearch="(?=0 OR COALESCE(CATEGORY_ID,'')=?) AND (? = '' OR INSTR(LOWER(CONTENT),LOWER(?)) > 0 OR INSTR(LOWER(SUMMARY),LOWER(?)) > 0)";
+        EXACT_QUERIES.add("SELECT COUNT(*) AS N FROM JOURNALS WHERE "+journalSearch);
+        EXACT_QUERIES.add("SELECT * FROM JOURNALS WHERE "+journalSearch+" ORDER BY TS DESC, ID DESC LIMIT ?");
+        EXACT_QUERIES.add("SELECT * FROM JOURNALS WHERE "+journalSearch+" AND (TS < ? OR (TS = ? AND ID < ?)) ORDER BY TS DESC, ID DESC LIMIT ?");
     }
 
     private SqlBridgePolicy() { }
@@ -232,6 +276,8 @@ public final class SqlBridgePolicy {
     }
 
     private static boolean validateInsert(String sql) {
+        if("INSERT INTO LEARNING_CATEGORIES(ID,NAME,COLOR,SORT_ORDER,ARCHIVED_AT,CREATED_AT,UPDATED_AT) VALUES (?,?,?,(SELECT COALESCE(MAX(SORT_ORDER),0)+1 FROM LEARNING_CATEGORIES),NULL,?,?)".equals(sql)
+                ||"INSERT INTO HABITS (NAME, DIMENSION, WEEKLY_TARGET, SORT_ORDER,CATEGORY_ID) VALUES (?, ?, ?, (SELECT COALESCE(MAX(SORT_ORDER),0)+1 FROM HABITS),?)".equals(sql))return true;
         // The only INSERT containing a subquery is the fixed habit ordering expression.
         if ("INSERT INTO HABITS (NAME, DIMENSION, WEEKLY_TARGET, SORT_ORDER) VALUES (?, ?, ?, (SELECT COALESCE(MAX(SORT_ORDER),0)+1 FROM HABITS))".equals(sql)
                 || "INSERT INTO HABITS (NAME, DIMENSION, WEEKLY_TARGET) VALUES (?, ?, 7)".equals(sql)
@@ -264,7 +310,7 @@ public final class SqlBridgePolicy {
         Set<String> supplied = new HashSet<>(listed);
         if (supplied.size() != listed.size()) return false;
         Set<String> required = new HashSet<>(COLUMNS.get(table));
-        if (!"REVIEW_CARDS".equals(table) && !"REVIEW_LOGS".equals(table)) {
+        if (!"REVIEW_CARDS".equals(table) && !"REVIEW_LOGS".equals(table) && !"LEARNING_CATEGORIES".equals(table) && !"FOCUS_REWARD_BLOCKS".equals(table)) {
             required.remove("ID");
             supplied.remove("ID");
         }
@@ -273,6 +319,7 @@ public final class SqlBridgePolicy {
             required.remove("SYNC_CAUSE");
             supplied.remove("SYNC_CAUSE");
         }
+        if(CATEGORY_TABLES.contains(table)&&!supplied.contains("CATEGORY_ID"))required.remove("CATEGORY_ID");
         return required.equals(supplied);
     }
 

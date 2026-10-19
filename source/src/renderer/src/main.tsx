@@ -11,9 +11,9 @@ import { COMMERCIAL_EDITION } from '../../shared/edition'
 async function boot(){
 if(COMMERCIAL_EDITION)document.documentElement.classList.add('commercial-edition')
 // Android installs its adapter before dynamically importing this entry.
-// Desktop installs only when commercial preload exposes its sync bridge.
+// Desktop personal/commercial preload exposes the synchronous native mirror.
 const clientStateSync=window.api.clientStateSync
-if(COMMERCIAL_EDITION&&clientStateSync){
+if(clientStateSync){
   installDurableClientStorage(localStorage,{
     initialize:state=>{
       const value=clientStateSync({op:'initialize',state})

@@ -1,10 +1,11 @@
 import type { BackgroundId, CustomBackground, Settings } from './types'
+import {effectiveThemeColor,normalizeWallpaperThemeColors,wallpaperColorPatch,wallpaperColorTarget} from './theme'
 
 export const ORIGINAL_IDS = ['original-deep-sea','original-forest-dawn','original-orbital-night'] as const
 export type OriginalId = typeof ORIGINAL_IDS[number]
 export const LIBRARY_LIMIT = 100
 export interface WallpaperItem extends CustomBackground { id: string; addedAt: number }
-export type ThemeAppearance = Pick<Settings, 'themeMode'|'themeColor'|'sceneTransition'|'ambientEffect'|'wallpaperMotion'|'backgroundFit'|'panelOpacity'|'panelBlur'|'wallpaperDim'|'clockStyle'|'clockScale'|'playerStyle'|'playerScale'|'timerPosition'|'wallpaperClock'|'clockPosition'|'playerPosition'|'particles'>
+export type ThemeAppearance = Pick<Settings, 'themeMode'|'themeColor'|'sceneTransition'|'ambientEffect'|'wallpaperMotion'|'backgroundFit'|'panelOpacity'|'panelBlur'|'wallpaperDim'|'clockStyle'|'clockScale'|'playerStyle'|'playerScale'|'timerPosition'|'wallpaperClock'|'clockPosition'|'playerPosition'|'particles'> & {wallpaperThemeColor?:string}
 export interface SavedTheme {
   id: string; name: string; createdAt: number; appearance: ThemeAppearance
   wallpaper: {type:'builtin';id:OriginalId}|{type:'library';id:string}
@@ -40,12 +41,14 @@ function position(value:unknown):{x:number;y:number}|null {
   const row=object(value);keys(row,['x','y'])
   return {x:number(row.x,0,1,'控件横坐标'),y:number(row.y,0,1,'控件纵坐标')}
 }
-const APPEARANCE_KEYS=['themeMode','themeColor','sceneTransition','ambientEffect','wallpaperMotion','backgroundFit','panelOpacity','panelBlur','wallpaperDim','clockStyle','clockScale','playerStyle','playerScale','timerPosition','wallpaperClock','clockPosition','playerPosition','particles']
+const APPEARANCE_KEYS=['themeMode','themeColor','sceneTransition','ambientEffect','wallpaperMotion','backgroundFit','panelOpacity','panelBlur','wallpaperDim','clockStyle','clockScale','playerStyle','playerScale','timerPosition','wallpaperClock','clockPosition','playerPosition','particles','wallpaperThemeColor']
 export function parseThemeAppearance(value:unknown):ThemeAppearance {
   const row=object(value);keys(row,APPEARANCE_KEYS)
   if(typeof row.themeColor!=='string'||!/^#[\da-f]{6}$/i.test(row.themeColor))throw Error('主题色必须为六位十六进制颜色')
+  if(row.wallpaperThemeColor!==undefined&&(typeof row.wallpaperThemeColor!=='string'||!/^#[\da-f]{6}$/i.test(row.wallpaperThemeColor)))throw Error('壁纸主题色必须为六位十六进制颜色')
   return {
     themeMode:oneOf(row.themeMode,['wallpaper','fixed'],'配色模式'),themeColor:row.themeColor.toLowerCase(),
+    ...(typeof row.wallpaperThemeColor==='string'?{wallpaperThemeColor:row.wallpaperThemeColor.toLowerCase()}:{}),
     sceneTransition:oneOf(row.sceneTransition,['fade','arc','none'],'切换效果'),ambientEffect:oneOf(row.ambientEffect,['none','motes','stars'],'环境光点'),
     wallpaperMotion:boolean(row.wallpaperMotion,'壁纸动态'),backgroundFit:oneOf(row.backgroundFit,['cover','contain'],'背景显示方式'),
     panelOpacity:number(row.panelOpacity,0,.9,'面板不透明度'),panelBlur:number(row.panelBlur,0,20,'面板模糊'),wallpaperDim:number(row.wallpaperDim,0,.6,'壁纸暗化'),
@@ -56,7 +59,8 @@ export function parseThemeAppearance(value:unknown):ThemeAppearance {
   }
 }
 export function captureAppearance(settings:Settings):ThemeAppearance {
-  return parseThemeAppearance(Object.fromEntries(APPEARANCE_KEYS.map(key=>[key,settings[key as keyof Settings]])))
+  return parseThemeAppearance({...Object.fromEntries(APPEARANCE_KEYS.filter(key=>key!=='wallpaperThemeColor').map(key=>[key,settings[key as keyof Settings]])),
+    ...(settings.themeMode==='wallpaper'?{wallpaperThemeColor:effectiveThemeColor(settings)}:{})})
 }
 export function parseThemeManifest(value:unknown):ThemeManifest {
   const row=object(value);keys(row,['format','version','name','appearance','wallpaper'])
@@ -110,7 +114,7 @@ export function normalizeThemeCollections(settings:Settings):Settings {
     if(background.type==='library'&&!wallpaperLibrary.some(item=>item.id===background.id))continue
     savedThemes.push({id:row.id,name:themeName(row.name),createdAt:typeof row.createdAt==='number'?row.createdAt:0,appearance:parseThemeAppearance(row.appearance),wallpaper:background})
   }catch{/* Corrupt entries do not execute or import arbitrary settings. */}}
-  return {...settings,customBackground,wallpaperLibrary,savedThemes}
+  return {...settings,customBackground,wallpaperLibrary,savedThemes,wallpaperThemeColors:normalizeWallpaperThemeColors(settings.wallpaperThemeColors)}
 }
 export function rememberWallpaper(settings:Settings,custom:CustomBackground):Partial<Settings> {
   const current=normalizeThemeCollections(settings),item=wallpaperItem({...custom,addedAt:Date.now()})
@@ -133,6 +137,12 @@ export function captureTheme(settings:Settings,name:string,id:string):SavedTheme
 }
 export function applyThemePatch(settings:Settings,theme:SavedTheme):Partial<Settings> {
   const media=theme.wallpaper.type==='library'?wallpaperById(settings,theme.wallpaper.id):null
-  return {...parseThemeAppearance(theme.appearance),background:media?'custom':theme.wallpaper.id as BackgroundId,
+  const {wallpaperThemeColor,...appearance}=parseThemeAppearance(theme.appearance)
+  const patch:Partial<Settings>={...appearance,background:media?'custom':theme.wallpaper.id as BackgroundId,
     ...(media?{customBackground:media}:{}),pageBackgrounds:false,showCharacter:false,characterStyle:'hidden',voiceEnabled:false,focusAlloutEnabled:false}
+  if(appearance.themeMode==='wallpaper'&&wallpaperThemeColor){
+    const selected={...settings,...patch}
+    Object.assign(patch,wallpaperColorPatch(selected,wallpaperColorTarget(selected),wallpaperThemeColor))
+  }
+  return patch
 }

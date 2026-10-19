@@ -16,7 +16,7 @@ export default function PortablePlayer({state,position,duration,open,onOpen,togg
     <button aria-label="上一首" disabled={!tracks.length} onClick={()=>st().prev()} title="上一首"><span aria-hidden="true">‹</span></button>
     <button aria-label={playing?'暂停音乐':'播放音乐'} disabled={!tracks.length} onClick={()=>st().toggle()} title={playing?'暂停':'播放'}><span aria-hidden="true">{playing?'Ⅱ':'▶'}</span></button>
     <button aria-label="下一首" disabled={!tracks.length} onClick={()=>st().next()} title="下一首"><span aria-hidden="true">›</span></button>
-    <button aria-label={'播放模式：'+({seq:'顺序',loop:'单曲',random:'随机'}[mode])} onClick={()=>st().setMode(mode==='seq'?'loop':mode==='loop'?'random':'seq')} title={'播放模式：'+({seq:'顺序',loop:'单曲',random:'随机'}[mode])}><span aria-hidden="true">{mode==='random'?'⤨':mode==='loop'?'↻':'↺'}</span></button>
+    <button aria-label={'播放模式：'+({seq:'顺序',loop:'单曲',random:'随机'}[mode])} onClick={()=>st().setMode(mode==='seq'?'loop':mode==='loop'?'random':'seq')} title={'播放模式：'+({seq:'顺序',loop:'单曲',random:'随机'}[mode])}><span aria-hidden="true">{mode==='seq'?'↻':mode==='loop'?'1':'⤨'}</span></button>
    </div></div>
    <div className="portable-progress" aria-hidden="true"><i style={{width:Math.min(100,duration?position/duration*100:0)+'%'}}/></div>
   </div>

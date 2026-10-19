@@ -6,6 +6,7 @@ export function noteCount(points:number):number {
   if(!Number.isFinite(points)||points<=0)return 0
   return points===1?1:points<=3?2:3
 }
+export function exactNoteCount(points:number):number {return Number.isFinite(points)?Math.max(0,Math.floor(points)):0}
 export function growthPhrase(points:number):string {
   return ['尚未体现','略有收获','有所收获','收获充实'][noteCount(points)]
 }

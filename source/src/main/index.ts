@@ -1,4 +1,5 @@
 import {createLanSyncServer} from './lanSyncServer'
+import { createFocusReminder } from './focusReminder'
 import {neteaseLogin,neteaseLogout,neteaseRequest,neteaseResolve,neteaseShareResolve} from './netease'
 import {cloudId} from '../shared/netease'
 import { PERSONAL_EDITION, COMMERCIAL_EDITION, ONLINE_MUSIC_ENABLED } from '../shared/edition'
@@ -11,12 +12,14 @@ import { exportThemeFile, importThemeFile, finishThemeImport } from './themeFile
 import { loadFocusRecovery, saveFocusRecovery, clearFocusRecovery } from './focusRecovery'
 import { createBackupController } from '../shared/backupController'
 import { createModelService } from './modelService'
+import { createPersonalClientStateStore } from './personalClientState'
 import { createErasureRequest, finishPendingErasure } from './privacyErasure'
 import { exportArchive, prepareArchive, finishArchive, verifyArchive } from './backupFiles'
 import { listImportedMusic, importMusicFiles, removeImportedMusic } from './music'
 import { listReviews, saveReview, rateReview, archiveReview } from './review'
-import { knowledgeRoot, selectKnowledgeRoot, listKnowledge, saveKnowledge, createKnowledge } from './knowledge'
-import { app, shell, BrowserWindow, dialog } from 'electron'
+import { knowledgeRoot, selectKnowledgeRoot, listKnowledge, saveKnowledge, createKnowledge, renameKnowledge, deleteKnowledge, setKnowledgeCategory } from './knowledge'
+import * as learningCategories from './learningCategories'
+import { app, shell, BrowserWindow, dialog, Notification } from 'electron'
 import { join, isAbsolute, parse } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { mkdirSync } from 'node:fs'
@@ -34,25 +37,35 @@ import {
   addFocusSession,
   commitFocus,
   todayFocusSeconds,
+  focusRewardState,
+  focusRewardPresentation,
+  ackFocusRewards,
   addJournal,
   commitJournal,
+  deleteJournal,
   listGrowth,
+  growthSummary,
   listJournals,
+  listJournalPage,
   listFocusSessions,
+  focusTaskSummary,
   updateSettings,
   exportAll,
   growthCsv,
   listTodos,
   addTodo,
+  updateTodo,
   toggleTodo,
   deleteTodo,
   addTodoFocus,
   listHabits,
   addHabit,
+  updateHabit,
   listHabitLogs,
   punchHabit,
   listEvents,
   addEvent,
+  updateEvent,
   deleteEvent
 } from './db'
 import { scoreJournal, testLLMConnection } from './scoring'
@@ -84,8 +97,7 @@ if (profileRoot) {
   app.setPath('crashDumps', join(profileRoot, 'crash-dumps'))
 }
 
-// Assign these before initDb/model migration/single-instance locking. The
-// source build must never discover the author's original personal profile.
+// The public source build never discovers an existing personal profile.
 app.setName('xinhai-source')
 const sourceProfile = join(app.getPath('appData'), 'xinhai-source')
 mkdirSync(sourceProfile, { recursive: true })
@@ -138,7 +150,13 @@ else app.whenReady().then(async () => {
   app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
 
   initDb()
-  const clientState=COMMERCIAL_EDITION?createAppDurableClientStateStore():undefined
+  const focusReminder=createFocusReminder(()=>{if(mainWindow?.isMinimized())mainWindow.restore();mainWindow?.show();mainWindow?.focus()})
+  applicationIpc.handle('focus:reminder',(_event,input)=>focusReminder(input))
+  applicationIpc.handle('focus:reminder:status',()=>({platform:'desktop',notificationsGranted:Notification.isSupported(),exactAlarmsGranted:true,canRequestExactAlarms:false}))
+  applicationIpc.handle('focus:reminder:access',()=>{throw Error('电脑端提醒由系统通知设置管理。')})
+  const personalClientState=PERSONAL_EDITION?createPersonalClientStateStore(app.getPath('userData')):undefined
+  const clientState=COMMERCIAL_EDITION?createAppDurableClientStateStore():personalClientState
+  if(personalClientState)app.once('will-quit',()=>personalClientState.close())
   const model=createModelService({directory:app.getPath('userData'),readLegacy:readLegacyModelSettings,clearLegacy:clearLegacyModelKey,savePublic:savePublicModelSettings})
   await model.status() // Migration errors become status messages; offline UI still starts.
   if(COMMERCIAL_EDITION) {
@@ -180,8 +198,9 @@ else app.whenReady().then(async () => {
     replace:(snapshot,prepared)=>restoreBackupState(snapshot,prepared.resources),
     resetSync:()=>{lanSync.stop();lanSync=createLanSyncServer(syncEngine,changed)}
   })
-  if(COMMERCIAL_EDITION&&clientState){
-    applicationIpc.syncHandler('client-state:sync',(_event,request:unknown)=>{
+  if(clientState){
+    // The new personal mirror is also restricted to the application's main document.
+    trustedIpc(()=>mainWindow,true,rendererUrl).syncHandler('client-state:sync',(_event,request:unknown)=>{
       if(erasureScheduled)throw Error('已确认清理，正在关闭应用；清理将在重新启动时完成')
       if(backup?.isRestoring)throw Error('正在恢复资料，请等待完成后再操作')
       return clientState.handle(request)
@@ -206,6 +225,15 @@ else app.whenReady().then(async () => {
   applicationIpc.handle('knowledge:list', () => listKnowledge())
   applicationIpc.handle('knowledge:save', (_e, note) => saveKnowledge(note))
   applicationIpc.handle('knowledge:create', (_e, title:string, initialContent?:string, expectedRoot?:string) => createKnowledge(title,initialContent,expectedRoot))
+  applicationIpc.handle('knowledge:rename', (_e, input) => renameKnowledge(input))
+  applicationIpc.handle('knowledge:delete', (_e, input) => deleteKnowledge(input))
+  applicationIpc.handle('knowledge:set-category', (_e, input) => setKnowledgeCategory(input))
+  applicationIpc.handle('categories:list', () => learningCategories.listLearningCategories())
+  applicationIpc.handle('categories:save', (_e, input) => learningCategories.saveLearningCategory(input))
+  applicationIpc.handle('categories:reorder', (_e, ids) => learningCategories.reorderLearningCategories(ids))
+  applicationIpc.handle('categories:archive', (_e, input) => learningCategories.archiveLearningCategory(input))
+  applicationIpc.handle('categories:summary', () => learningCategories.learningCategorySummary())
+  applicationIpc.handle('categories:set-record', (_e, input) => learningCategories.setLearningRecordCategory(input))
   applicationIpc.handle('knowledge:folder', () => shell.openPath(knowledgeRoot()))
   applicationIpc.handle('knowledge:obsidian', () => shell.openExternal('obsidian://open?path='+encodeURIComponent(knowledgeRoot())))
   applicationIpc.handle('knowledge:choose', async () => {
@@ -273,6 +301,9 @@ else app.whenReady().then(async () => {
     applyGrowth(items)
   )
   applicationIpc.handle('focus:commit', (_e, s) => commitFocus(s))
+  applicationIpc.handle('focus:rewards:state',()=>focusRewardState())
+  applicationIpc.handle('focus:rewards:presentation',()=>focusRewardPresentation())
+  applicationIpc.handle('focus:rewards:ack',(_e,token,blockIds)=>ackFocusRewards(token,blockIds))
   applicationIpc.handle('focus:recovery:load', () => loadFocusRecovery())
   applicationIpc.handle('focus:recovery:save', (_e, value) => saveFocusRecovery(value))
   applicationIpc.handle('focus:recovery:clear', (_e, token?:string) => clearFocusRecovery(token))
@@ -280,14 +311,19 @@ else app.whenReady().then(async () => {
   applicationIpc.handle('focus:add', (_e, s) => addFocusSession(s))
   applicationIpc.handle('journal:add', (_e, j) => addJournal(j))
   applicationIpc.handle('journal:commit', (_e, j) => commitJournal(j))
+  applicationIpc.handle('journal:delete', (_e, id:number, expectedTs:number, confirmation:string) => deleteJournal(id,expectedTs,confirmation))
   applicationIpc.handle('llm:test',()=>testLLMConnection(model))
   applicationIpc.handle('journal:score', (_e, text: string, mode?:import('../shared/modelConfig').JournalAnalysisMode) => scoreJournal(text, model, {mode}))
   applicationIpc.handle('growth:list', () => listGrowth())
+  applicationIpc.handle('growth:summary', () => growthSummary())
   applicationIpc.handle('journals:list', () => listJournals())
+  applicationIpc.handle('journals:page', (_e, input) => listJournalPage(input))
   applicationIpc.handle('focus:list', () => listFocusSessions())
+  applicationIpc.handle('focus:task-summary', () => focusTaskSummary())
   applicationIpc.handle('settings:update', (_e, patch: Partial<Settings>) => updateSettings(patch))
   applicationIpc.handle('todos:list', () => listTodos())
   applicationIpc.handle('todos:add', (_e, t) => addTodo(t))
+  applicationIpc.handle('todos:update', (_e, input) => { updateTodo(input); changed() })
   applicationIpc.handle('todos:toggle', (_e, id: number) => toggleTodo(id))
   applicationIpc.handle('todos:delete', (_e, id: number) => deleteTodo(id))
   applicationIpc.handle('todos:addFocus', (_e, id: number, minutes: number) => addTodoFocus(id, minutes))
@@ -296,12 +332,14 @@ else app.whenReady().then(async () => {
   applicationIpc.handle('habits:restore',(_e,id:number)=>restoreHabit(id))
   applicationIpc.handle('habits:list', () => listHabits())
   applicationIpc.handle('habits:add', (_e, h) => addHabit(h))
+  applicationIpc.handle('habits:update', (_e, input) => { updateHabit(input); changed() })
   applicationIpc.handle('habits:logs', () => listHabitLogs())
   applicationIpc.handle('habits:punch', (_e, id: number) => punchHabit(id))
   applicationIpc.handle('calendar:month', (_e, month:string) => calendarMonth(month))
   applicationIpc.handle('events:list', () => listEvents())
   applicationIpc.handle('events:add', (_e, e) => addEvent(e))
-  applicationIpc.handle('events:delete', (_e, id: number) => deleteEvent(id))
+  applicationIpc.handle('events:update', (_e, input) => { updateEvent(input); changed() })
+  applicationIpc.handle('events:delete', (_e, id: number, confirmation?:string) => { deleteEvent(id, confirmation); changed() })
   applicationIpc.handle('export:json', () => exportAll())
   applicationIpc.handle('export:csv', () => growthCsv())
   applicationIpc.handle('dialog:save', async (_e, defaultName: string, content: string) => {

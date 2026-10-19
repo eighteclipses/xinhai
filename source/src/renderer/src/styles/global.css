@@ -1,4 +1,5 @@
-/* The source snapshot uses system fonts; no game font is redistributed. */
+/* P3R 官方数字字体 */
+/* Source build uses system font fallbacks; third-party fonts are omitted. */
 
 :root {
   --theme-color: #21bce7;

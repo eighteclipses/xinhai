@@ -10,7 +10,9 @@ export default function DraggableWidget({kind,width,height,scale=1,unrestricted=
  const [viewport,setViewport]=useState(()=>({w:innerWidth,h:innerHeight}))
  const [drag,setDrag]=useState<Position|null>(null)
  const active=useRef<{pointer:number;x:number;y:number;left:number;top:number;last:Position;started:boolean}|null>(null)
- const top=unrestricted?8:52,bottom=unrestricted?8:8+(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-height'))||66)
+ const shell=document.querySelector('.study-shell')??document.documentElement,style=getComputedStyle(shell)
+ const top=unrestricted?8:8+(parseFloat(style.getPropertyValue('--title-height'))||44)
+ const bottom=unrestricted?8:8+(parseFloat(style.getPropertyValue('--nav-height'))||0)+(parseFloat(style.getPropertyValue('--music-height'))||0)
  const effective=Math.max(.1,Math.min(scale,(viewport.w-16)/width,(viewport.h-top-bottom)/height))
  const w=width*effective,h=height*effective,maxX=Math.max(0,viewport.w-w-16),maxY=Math.max(0,viewport.h-h-top-bottom)
  const defaultPos=kind==='clock'?{x:1,y:0}:{x:0,y:1}

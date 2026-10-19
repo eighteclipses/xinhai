@@ -15,6 +15,13 @@
 .knowledge-recovery-hint { display: grid; gap: 5px; padding: 12px; border-left: 3px solid var(--theme-light); background: color-mix(in srgb, var(--theme-panel) 94%, transparent); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
 .knowledge-recovery-hint strong { color: var(--theme-pale); }
 .knowledge-recovery-hint span, .knowledge-recovery-hint small { color: var(--theme-light); }
+.knowledge-editor header { flex-wrap: wrap; gap: 10px; }
+.knowledge-editor header > div { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+.knowledge-recovery-hint > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.knowledge-recovery-hint input { min-width: 0; width: 100%; }
 .knowledge-editor h2 { overflow-wrap: anywhere; }
+.knowledge-category { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.knowledge-category > small { flex: 1 1 220px; font-size: 12px; line-height: 1.6; color: var(--theme-light); }
+.knowledge-sidebar > .learning-category-select { width: 100%; max-width: none; }
 .study-shell[data-page=knowledge][data-player=card] .page-stage-knowledge > .knowledge-hub { padding-bottom: 220px !important; }
 @media (max-height: 750px) { .knowledge-recovery-list { max-height: 120px; } }

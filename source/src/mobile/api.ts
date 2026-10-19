@@ -2,6 +2,7 @@ import {createLanSyncClient} from './lanSyncClient'
 import {cloudResolve,cloudId,playlistShare} from '../shared/netease'
 import * as db from '../main/db'
 import * as review from '../main/review'
+import * as learningCategories from '../main/learningCategories'
 import * as themes from '../main/themeLibrary'
 import { loadFocusRecovery, saveFocusRecovery, clearFocusRecovery } from '../main/focusRecovery'
 import type { ThemeImportResult } from '../shared/themeLibrary'
@@ -28,7 +29,8 @@ export function installMobileApi(){
     const result=await request<{status:number;body:string}>('http',{url,method:init?.method||'GET',headers:Object.fromEntries(new Headers(init?.headers).entries()),body:init?.body??null})
     return new Response(result.body,{status:result.status,headers:{'Content-Type':'application/json'}})
   }
-  if(COMMERCIAL_EDITION)installDurableClientStorage(localStorage,{
+  // The native acknowledgement makes new draft keys durable before old keys are removed.
+  installDurableClientStorage(localStorage,{
     initialize:state=>native<Record<string,string>>('clientStateInit',{state}),
     set:(key,value)=>{native<void>('clientStateSet',{key,value})},
     remove:key=>{native<void>('clientStateRemove',{key})},
@@ -54,6 +56,13 @@ export function installMobileApi(){
   const neteaseRequest=(path:string)=>{requireOnlineMusic();return request<any>('neteaseRequest',{path})}
   let activeOperations=0
   const api:XinhaiApi={
+    learningCategoriesList:async()=>learningCategories.listLearningCategories(),
+    learningCategorySave:async input=>{const result=learningCategories.saveLearningCategory(input);changed();return result},
+    learningCategoriesReorder:async ids=>{learningCategories.reorderLearningCategories(ids);changed()},
+    learningCategoryArchive:async input=>{learningCategories.archiveLearningCategory(input);changed()},
+    learningCategorySummary:async()=>learningCategories.learningCategorySummary(),
+    learningRecordCategorySet:async input=>{learningCategories.setLearningRecordCategory(input);changed()},
+    knowledgeSetCategory:async input=>native<KnowledgeNote>('knowledgeSetCategory',input),
     clearOnlineMusicData:()=>request<void>('clearOnlineMusicData'),
     privacyPrepare:async()=>{if(backup.isBusy)throw Error('请先完成当前备份操作');return native<import('../shared/privacyErasure').ErasurePreview>('privacyPrepare')},
     privacyCancel:async()=>native<void>('privacyCancel'),
@@ -62,6 +71,9 @@ export function installMobileApi(){
     backupExport:client=>backup.export(client),backupPrepare:()=>backup.prepare(),backupCancel:ticket=>backup.cancel(ticket),backupRestore:(ticket,confirmation,client)=>backup.restore(ticket,confirmation,client),
     backupClientRestore:async()=>db.readBackupClientRestore(),backupAcknowledgeRestore:async token=>db.ackBackupClientRestore(token),
     loadFocusRecovery:async()=>loadFocusRecovery(),saveFocusRecovery:async record=>saveFocusRecovery(record),clearFocusRecovery:async token=>clearFocusRecovery(token),
+    focusReminder:async input=>native<void>('focusReminder',{reminder:input}),
+    focusReminderStatus:async()=>native<import('../shared/focusReminderCapability').FocusReminderCapability>('focusReminderStatus'),
+    focusReminderRequestAccess:async access=>native<void>('focusReminderRequestAccess',{access}),
     syncStatus:async()=>lanSync.status(),syncEnable:value=>lanSync.enable(value),
     syncPairCode:async()=>{throw Error('请在电脑上生成配对码。')},syncPair:code=>lanSync.pair(code),
     syncNow:()=>lanSync.now(),syncUnpair:id=>lanSync.unpair(id),
@@ -73,20 +85,28 @@ export function installMobileApi(){
     growthResetInfo:async()=>db.growthResetInfo(),resetGrowth:async(c,scope)=>db.resetGrowth(c,scope),undoGrowthReset:async()=>db.undoGrowthReset(),
     getState:async()=>db.getState(),applyGrowth:async(items)=>db.applyGrowth(items as Parameters<typeof db.applyGrowth>[0]),
     commitFocus:async(s)=>db.commitFocus(s),todayFocusSeconds:async()=>db.todayFocusSeconds(),
+    focusRewardState:async()=>db.focusRewardState(),focusRewardPresentation:async()=>db.focusRewardPresentation(),ackFocusRewards:async(token,blockIds)=>db.ackFocusRewards(token,blockIds),
     addFocusSession:async(s)=>db.addFocusSession(s as Parameters<typeof db.addFocusSession>[0]),
     addJournal:async(j)=>db.addJournal(j as Parameters<typeof db.addJournal>[0]),
     commitJournal:async(j)=>db.commitJournal(j),
+    deleteJournal:async(id,expectedTs,confirmation)=>{const removed=db.deleteJournal(id,expectedTs,confirmation);changed();return removed},
     scoreJournal:async(text,mode)=>scoreJournal(text,model,{mode}),testLLM:async()=>testLLMConnection(model),
     listGrowth:async()=>db.listGrowth(),listJournals:async()=>db.listJournals(),listFocus:async()=>db.listFocusSessions(),
+    listJournalPage:async(input)=>db.listJournalPage(input),
+    growthSummary:async()=>db.growthSummary(),
+    focusTaskSummary:async()=>db.focusTaskSummary(),
     updateSettings:async(patch)=>db.updateSettings(patch as Partial<Settings>),
     todosList:async()=>db.listTodos(),todosAdd:async(t)=>db.addTodo(t as Parameters<typeof db.addTodo>[0]),
+    todosUpdate:async(input)=>{db.updateTodo(input);changed()},
     todosToggle:async(id)=>db.toggleTodo(id),todosDelete:async(id)=>db.deleteTodo(id),todosAddFocus:async(id,m)=>db.addTodoFocus(id,m),
     habitsList:async()=>db.listHabits(),habitsAdd:async(h)=>db.addHabit(h as Parameters<typeof db.addHabit>[0]),habitsLogs:async()=>db.listHabitLogs(),habitsPunch:async(id)=>db.punchHabit(id),
+    habitsUpdate:async(input)=>{db.updateHabit(input);changed()},
     habitsReorder:async(ids)=>db.reorderHabits(ids),habitsDelete:async(id)=>db.deleteHabit(id),habitsRestore:async(id)=>db.restoreHabit(id),
-    eventsList:async()=>db.listEvents(),eventsAdd:async(e)=>db.addEvent(e as Parameters<typeof db.addEvent>[0]),eventsDelete:async(id)=>db.deleteEvent(id),calendarMonth:async(m)=>db.calendarMonth(m),
+    eventsList:async()=>db.listEvents(),eventsAdd:async(e)=>db.addEvent(e as Parameters<typeof db.addEvent>[0]),eventsUpdate:async(input)=>{db.updateEvent(input);changed()},eventsDelete:async(id,confirmation)=>{db.deleteEvent(id,confirmation);changed()},calendarMonth:async(m)=>db.calendarMonth(m),
     exportJson:async()=>db.exportAll(),exportCsv:async()=>db.growthCsv(),saveFile:async(defaultName,content)=>request('saveFile',{defaultName,content}),
     reviewList:async()=>review.listReviews(),reviewSave:async(d)=>review.saveReview(d),reviewRate:async(d)=>review.rateReview(d),reviewArchive:async(d)=>review.archiveReview(d),
     knowledgeList:async()=>native<KnowledgeVault>('knowledgeList'),knowledgeSave:async(note)=>native<KnowledgeNote>('knowledgeSave',note),knowledgeCreate:async(title,initialContent,expectedRoot)=>native<KnowledgeNote>('knowledgeCreate',{title,initialContent,expectedRoot}),
+    knowledgeRename:async(input)=>native<KnowledgeNote>('knowledgeRename',input),knowledgeDelete:async(input)=>native<void>('knowledgeDelete',input),
     knowledgeChoose:async()=>request<KnowledgeVault|null>('knowledgeChoose'),knowledgeFolder:async()=>native<string>('knowledgeFolder'),knowledgeObsidian:async()=>native<void>('knowledgeObsidian'),
     musicList:async()=>listImportedMusic(),musicImport:async()=>importMusicFiles(),musicRemove:async(id)=>removeImportedMusic(id),
     backgroundImport:async()=>{if(db.getState().settings.wallpaperLibrary.length>=100)throw Error('壁纸收藏已达到 100 张，请先移除不需要的收藏');const custom=await request<Settings['customBackground']>('backgroundImport');return custom?themes.addWallpaper(custom):null},

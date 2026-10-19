@@ -1,0 +1,56 @@
+{
+  "snapshot": "0.2.33-source.0",
+  "date": "2026-10-20",
+  "originCommit": "53d8a837cf317b3405ff90a8a7ebc96aa4b1139c",
+  "results": {
+    "dependencyInstall": {
+      "ok": true,
+      "command": "npm ci --ignore-scripts",
+      "packages": 523,
+      "nativeInstallSkipped": true
+    },
+    "typecheck": {
+      "ok": true
+    },
+    "desktopBuild": {
+      "ok": true
+    },
+    "mobileWebBuild": {
+      "ok": true
+    },
+    "syntheticScripts": {
+      "ok": true,
+      "scripts": 12
+    },
+    "nativeRewardLedger": {
+      "ok": true,
+      "checks": 11,
+      "runtime": "existing matching Electron 33.4.11 and better-sqlite3 11.10.0"
+    },
+    "compiledSourceUi": {
+      "ok": true,
+      "checks": 4,
+      "profile": "isolated synthetic profile only"
+    },
+    "privacyScan": {
+      "ok": true,
+      "sourceDesktopAndMobileArtifacts": 7,
+      "privateTextPublished": false
+    },
+    "sourceScopeAndManifest": {
+      "ok": true
+    }
+  },
+  "authorOriginal": {
+    "unchanged": true,
+    "paragraphs": 13,
+    "sha256": "a958c43c3b425650ae834d922845e0d2c70b69f41f05e598c9f4479e2ebb3ba0"
+  },
+  "notVerified": [
+    "fresh native runtime installation",
+    "source installer generation/installation/upgrade",
+    "source APK build/install",
+    "physical device and natural-duration audible reminders",
+    "full dependency/security audit"
+  ]
+}

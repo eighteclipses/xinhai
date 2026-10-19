@@ -1,0 +1,5 @@
+/* Enlarge the established composition without changing its columns, surfaces or user offsets. */
+.study-shell .desk-page[data-auto-scaled=true]{padding-left:calc(var(--home-logical-width) * .04);padding-right:calc(var(--home-logical-width) * .04)}
+.study-shell .desk-page[data-auto-scaled=true] .desk-content>h1{font-size:clamp(22px,calc(var(--home-logical-width) * .023),33px)}
+.study-shell .desk-page[data-auto-scaled=true] .desk-clock{font-size:clamp(80px,calc(var(--home-logical-width) * .084),126px)}
+.study-shell .desk-page[data-auto-scaled=true] .desk-date{right:calc(var(--home-logical-width) * .04)}

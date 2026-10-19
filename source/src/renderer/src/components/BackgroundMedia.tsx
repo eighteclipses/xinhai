@@ -5,13 +5,15 @@ import { useReducedEffects } from '../lib/motion'
 import ThemeSweep from './ThemeSweep'
 import { effectiveThemeColor } from '../../../shared/theme'
 import { FALLBACK_POSTER } from '../../../shared/sceneCatalog'
-import { firstVideoFrameDeadline } from '../lib/videoFrameWait'
+import { watchWallpaperPlayback } from '../lib/wallpaperPlayback'
+import '../styles/moon-scene-readability.css'
 
 // Every video has a matching still for loading, decoder errors and reduced motion.
 function Scene({ scene }: { scene: ReturnType<typeof resolveScene> }) {
   const reduce = useReducedEffects()
   const drift=useApp(s=>s.settings.wallpaperMotion&&s.settings.backgroundFit==='cover')
   const video = useRef<HTMLVideoElement>(null)
+  const activity = useRef({ paused: false })
   const [intro, setIntro] = useState(Boolean(scene.intro))
   const [failed, setFailed] = useState(false)
   const [ready, setReady] = useState(false)
@@ -23,62 +25,21 @@ function Scene({ scene }: { scene: ReturnType<typeof resolveScene> }) {
     const element = video.current
     if (!element) return
     setReady(false)
-    let disposed = false
-    let suspended = false
-    const frameDeadline=firstVideoFrameDeadline(element,()=>setFailed(true))
-    let retry: ReturnType<typeof setTimeout> | undefined
-    const clearRetry = () => { if (retry) { clearTimeout(retry); retry = undefined } }
-    const play = () => {
-      if (disposed || suspended || document.hidden || element.ended) return
-      if (!element.paused) return
-      void element.play().catch(() => {
-        // Android WebView can reject the first play() while its surface is
-        // being restored. A transient rejection is not a broken wallpaper.
-        if (!disposed && !suspended && !document.hidden && !retry) {
-          retry = setTimeout(() => { retry = undefined; play() }, 700)
-        }
-      })
-    }
-    const scheduleRecovery = () => {
-      if (disposed || suspended || document.hidden || retry || element.ended) return
-      retry = setTimeout(() => { retry = undefined; play() }, 350)
-    }
-    const resume = () => { suspended = false; clearRetry(); if(!document.hidden)frameDeadline.resume(); play() }
-    const pause = () => { suspended = true; clearRetry(); frameDeadline.pause(); element.pause() }
-    const syncVisibility = () => { if (document.hidden) pause(); else resume() }
-    resume()
-    document.addEventListener('visibilitychange', syncVisibility)
-    window.addEventListener('xinhai-resume', resume)
-    window.addEventListener('xinhai-pause', pause)
-    // A WebView may report a decoder stall as a pause without changing
-    // document.hidden. Retry only while the user is still viewing the scene.
-    element.addEventListener('pause', scheduleRecovery)
-    element.addEventListener('waiting', scheduleRecovery)
-    element.addEventListener('stalled', scheduleRecovery)
-    return () => {
-      disposed = true
-      clearRetry()
-      frameDeadline.dispose()
-      document.removeEventListener('visibilitychange', syncVisibility)
-      window.removeEventListener('xinhai-resume', resume)
-      window.removeEventListener('xinhai-pause', pause)
-      element.removeEventListener('pause', scheduleRecovery)
-      element.removeEventListener('waiting', scheduleRecovery)
-      element.removeEventListener('stalled', scheduleRecovery)
-      element.pause()
-    }
-  }, [src, animated])
+    return watchWallpaperPlayback(element, {
+      intro,
+      startTime: intro && scene.id === 'journal' ? 0.7 : undefined,
+      activity: activity.current,
+      onIntroEnded: () => { setReady(false); setIntro(false) },
+      onPlaying: () => setReady(true),
+      onFailure: () => setFailed(true)
+    })
+  }, [src, animated, intro, scene.id])
 
   if (scene.kind === 'procedural') return null
   return <div className={'scene-media'+(scene.kind==='image'&&drift&&!reduce?' is-drifting':'')} aria-hidden="true" data-scene={scene.id} data-fallback={failed || reduce ? 'true' : 'false'}>
     <img src={scene.poster} alt="" onError={e=>{if(!e.currentTarget.src.endsWith(FALLBACK_POSTER))e.currentTarget.src=FALLBACK_POSTER}} />
     {animated && <video ref={video} key={src} src={src} poster={scene.poster} muted loop={!intro} playsInline preload="auto" disablePictureInPicture
-      onLoadedMetadata={(e) => { if (intro && scene.id === 'journal') e.currentTarget.currentTime = 0.7 }}
-      style={{ opacity: ready ? 1 : 0 }} onPlaying={() => setReady(true)} onError={() => setFailed(true)}
-      onEnded={(e) => {
-        if (intro) { setReady(false); setIntro(false) }
-        else { e.currentTarget.currentTime = 0; void e.currentTarget.play().catch(() => undefined) }
-      }} />}
+      style={{ opacity: ready ? 1 : 0 }} />}
   </div>
 }
 

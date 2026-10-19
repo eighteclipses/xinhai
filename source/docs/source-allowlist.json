@@ -1,0 +1,1045 @@
+{
+  "snapshot": "0.2.33-source.0",
+  "originCommit": "53d8a837cf317b3405ff90a8a7ebc96aa4b1139c",
+  "basePublicCommit": "b66f29a3c248279298badbc830430cf0cb01fd22",
+  "textNormalization": "UTF-8 LF and a single EOF newline; original LICENSE/NOTICE bytes preserved",
+  "frozenInputs": [
+    {
+      "path": "src/main/background.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/backgroundImage.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/backupDatabase.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/backupFiles.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/db.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/durableClientState.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/focusRecovery.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/focusReminder.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/index.ts",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/main/knowledge.ts",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/main/knowledgeCategories.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/lanSyncServer.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/learningCategories.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/modelService.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/music.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/netease.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/personalClientState.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/personalScoringPrompt.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/privacyDeleteScript.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/privacyErasure.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/review.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/runtimeNotices.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/scoring.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/snapshot.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/themeFiles.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/themeLibrary.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/main/windowSecurity.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/mobile/api.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/mobile/durableClientStorage.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/mobile/electron.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/mobile/lanSyncClient.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/mobile/main.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/mobile/music.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/mobile/native.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/mobile/path.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/mobile/sqlite.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/preload/index.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/index.html",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/App.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/AlloutFinish.tsx",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/renderer/src/components/Atmosphere.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/AutoSceneRotation.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/BackgroundMedia.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/BackupSettings.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/CharacterGallery.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/CharacterLayer.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/CharacterPlacement.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/CharacterPortrait.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/CharacterVisual.tsx",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/renderer/src/components/CommercialEmpty.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/CompactPlayer.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/CustomizationIndex.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/DataReset.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/DraggableWidget.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/FocusOutcome.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/FocusReminder.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/FocusReminderReadiness.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/FocusSettings.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/FocusWidget.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/GiantNumber.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/GrowthNotes.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/GrowthOverlay.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/HomeLayout.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/LanSyncSettings.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/LanSyncUpdates.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/LearningCategoryControl.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/LearningCategoryManager.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/LearningCategoryStats.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/MarchMemory.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/MinimalClock.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/ModelSettings.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/MusicPlayer.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/Nav.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/NetEaseLibrary.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/OpenSourceLicenses.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/OriginalThemeCards.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/P3RClock.tsx",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/renderer/src/components/PersonaRadar.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/PersonalAppearancePresets.tsx",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/renderer/src/components/PortablePlayer.tsx",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/renderer/src/components/PrivacyEraseSettings.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/PrivacyInfo.tsx",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/renderer/src/components/SceneGallery.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/SceneRotationSettings.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/SharedPlaylists.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/StartupAnnouncement.tsx",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/renderer/src/components/ThemePalette.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/ThemeSettings.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/ThemeSweep.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/TitleBar.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/Toggle.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/UnderwaterBackground.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/env.d.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/anniversaryMusic.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/audio.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/backupClientState.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/bgm.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/characterViewport.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/cloudLibrary.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/elapsedClock.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/generatedCopy.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/growthPresentation.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/knowledgeDraft.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/motion.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/musicResume.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/presentation.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/radar.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/reviewDraft.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/scenes.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/settingNavigation.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/useHomeViewport.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/useMusicPanelPosition.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/videoFrameWait.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/voice.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/wallpaperColors.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/lib/wallpaperPlayback.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/main.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/Calendar.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/Customize.tsx",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/renderer/src/pages/Focus.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/Habits.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/History.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/Home.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/Journal.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/Knowledge.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/Review.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/Settings.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/Stats.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/ThemeStudio.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/pages/Todos.tsx",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/store/app.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/store/focusTasks.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/store/journal.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/store/learningCategories.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/store/music.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/backup-settings.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/calendar-groups.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/character-gallery.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/commercial-contrast.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/customization-index.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/customize.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/focus-finish.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/focus-reminder.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/focus-tasks.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/focus-widget.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/global.css",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/renderer/src/styles/history-focus-summary.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/home-layout.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/home-scale.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/interface-refinements.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/journal.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/knowledge-recovery.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/lan-sync.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/learning-categories.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/march-memory.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/mobile.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/moon-scene-readability.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/music-focus.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/music-panel.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/p3r-refresh.css",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/renderer/src/styles/personal-appearance.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/planner-editors.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/planner.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/privacy-erasure.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/privacy-info.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/pv-upgrade.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/review-management.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/scene-polish.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/scene-rotation.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/scene-wave.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/startup-announcement.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/theme-palette.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/theme-settings.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/theme-studio.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/styles/theme-sweep.css",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/virtual-xinhai-notices.d.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/anniversary.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/announcementContent.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/backupArchive.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/backupArchiveTypes.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/backupController.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/backupDatabase.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/calendarGroups.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/characterArt.ts",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/shared/characterPlacement.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/clientState.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/commercialScoringPrompt.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/credits.json",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/date.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/edition.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/focusPreferences.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/focusRecovery.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/focusReminder.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/focusReminderCapability.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/focusRewards.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/focusTaskSummary.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/homeLayout.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/homeViewport.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/knowledgeCategories.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/knowledgeLinks.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/lanSyncCrypto.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/lanSyncEngine.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/lanSyncTypes.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/learningCategories.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/llmEndpoint.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/llmTransport.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/localScoring.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/modelConfig.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/modelScope.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/netease.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/onlineMusic.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/originalThemes.ts",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/shared/personalAppearance.ts",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/shared/personalCharacterArt.json",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/personalRelease.ts",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/shared/privacyErasure.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/review.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/sceneCatalog.ts",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "src/shared/sceneMigration.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/sceneMotion.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/sceneRotation.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/scenes.json",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/theme.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/themeContrast.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/themeLibrary.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/types.ts",
+      "mode": "public-source-adaptation"
+    },
+    {
+      "path": "android/app/src/main/java/com/xinhai/study/BackupFiles.java",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/java/com/xinhai/study/ClientStateStore.java",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/java/com/xinhai/study/FocusReminder.java",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/java/com/xinhai/study/LanSyncHttp.java",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/java/com/xinhai/study/MainActivity.java",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/java/com/xinhai/study/ModelService.java",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/java/com/xinhai/study/NetEaseService.java",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/java/com/xinhai/study/PrivacyErase.java",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/java/com/xinhai/study/SqlBridgePolicy.java",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/java/com/xinhai/study/ThemeFiles.java",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/AndroidManifest.xml",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "android/app/src/main/res/xml/network_security_config.xml",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "mobile.html",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "tsconfig.json",
+      "mode": "frozen-code"
+    }
+  ],
+  "additionalPublishedInputs": [
+    ".gitattributes",
+    ".gitignore",
+    "BUILD.md",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "THIRD-PARTY-NOTICES.md",
+    "android/app/build.gradle",
+    "android/app/src/main/res/drawable/ic_launcher_foreground.xml",
+    "android/app/src/main/res/drawable/ic_launcher_monochrome.xml",
+    "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+    "android/app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml",
+    "android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+    "android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+    "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+    "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+    "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+    "android/app/src/main/res/values/icon_colors.xml",
+    "android/build.gradle",
+    "android/gradle.properties",
+    "android/settings.gradle",
+    "build/icon.ico",
+    "build/icon.png",
+    "build/icon.svg",
+    "docs/media-boundary.md",
+    "docs/omitted-character-art.json",
+    "docs/source-allowlist.json",
+    "docs/source-manifest.json",
+    "docs/source-validation.json",
+    "docs/source-validation.md",
+    "electron-builder.yml",
+    "electron.vite.config.ts",
+    "package-lock.json",
+    "package.json",
+    "resources/licenses/RhineLabUI-MIT.txt",
+    "scripts/check-backup-format.cjs",
+    "scripts/check-client-state-ipc.cjs",
+    "scripts/check-durable-client-storage.cjs",
+    "scripts/check-focus-preferences.cjs",
+    "scripts/check-focus-rewards.cjs",
+    "scripts/check-llm-endpoint.cjs",
+    "scripts/check-local-scoring.cjs",
+    "scripts/check-scene-motion.cjs",
+    "scripts/check-share-parser.cjs",
+    "scripts/check-snapshot-security.cjs",
+    "scripts/check-source.cjs",
+    "scripts/check-theme-contrast.cjs",
+    "scripts/check-video-first-frame-wait.cjs",
+    "scripts/check-wallpaper-video-colors.cjs",
+    "scripts/test.cjs",
+    "src/renderer/public/backgrounds/originals/deep-sea.svg",
+    "src/renderer/public/backgrounds/originals/forest-dawn.svg",
+    "src/renderer/public/backgrounds/originals/orbital-night.svg",
+    "src/renderer/public/design/app-icon.png",
+    "src/renderer/public/design/app-icon.svg",
+    "src/renderer/public/design/player-demo.svg",
+    "src/renderer/public/music/manifest.json",
+    "src/renderer/public/voices/manifest.json",
+    "vite.mobile.config.ts"
+  ],
+  "excludedDirectories": [
+    ".git",
+    ".gradle",
+    "__pycache__",
+    "design-review",
+    "dist",
+    "node_modules",
+    "out"
+  ],
+  "excludedInputs": [
+    "private Git history",
+    "real learning data/profiles/knowledge/backups",
+    "credentials/model runtime configuration/signing keys",
+    "raw device diagnostics and pairing state",
+    "third-party media/font/player-skin binaries"
+  ]
+}

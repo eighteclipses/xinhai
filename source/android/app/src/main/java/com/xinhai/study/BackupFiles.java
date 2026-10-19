@@ -364,7 +364,8 @@ final class BackupFiles {
 
     private void validateSnapshotBasic(JSONObject snapshot) throws IOException {
         if (snapshot == null || !"xinhai-database-snapshot".equals(snapshot.optString("format", ""))
-                || snapshot.optInt("version", -1) != 1
+                || !(snapshot.opt("version") instanceof Number)
+                || (snapshot.optDouble("version", -1) != 1 && snapshot.optDouble("version", -1) != 2 && snapshot.optDouble("version", -1) != 3)
                 || !(snapshot.opt("tables") instanceof JSONObject)
                 || !(snapshot.opt("sequences") instanceof JSONObject)
                 || !(snapshot.opt("clientState") instanceof JSONObject)) {

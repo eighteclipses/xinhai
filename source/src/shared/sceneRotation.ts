@@ -2,6 +2,7 @@ import {migratedSceneId} from './sceneMigration'
 import {DEFAULT_SCENE_ID,FALLBACK_POSTER} from './sceneCatalog'
 import {COMMERCIAL_EDITION} from './edition'
 import {normalizeThemeCollections} from './themeLibrary'
+import {characterArtById} from './characterArt'
 import type {BackgroundId,Settings} from './types'
 
 // Return the next future deadline, or zero when the interval is not due.
@@ -19,8 +20,11 @@ export function normalizeSceneSettings(settings:Settings):Settings{
  next.sceneTransition=['fade','arc','none'].includes(next.sceneTransition)?next.sceneTransition:'fade'
  next.ambientEffect=['none','motes','stars'].includes(next.ambientEffect)?next.ambientEffect:'none'
  next.wallpaperMotion=next.wallpaperMotion===true
+ next.characterArtId=characterArtById(next.characterArtId)?.id??''
+ next.characterStyle=['auto','seated','uniform','battle','gallery','hidden'].includes(next.characterStyle)?next.characterStyle:'auto'
+ if(next.characterStyle==='gallery'&&!next.characterArtId)next.characterStyle='auto'
  if(COMMERCIAL_EDITION){
-  next.showCharacter=false;next.characterStyle='hidden';next.voiceEnabled=false;next.focusAlloutEnabled=false;next.pageBackgrounds=false
+  next.showCharacter=false;next.characterStyle='hidden';next.characterArtId='';next.voiceEnabled=false;next.focusAlloutEnabled=false;next.pageBackgrounds=false
   if(next.clockStyle==='p3r')next.clockStyle='minimal'
   if(next.playerStyle==='mp3')next.playerStyle='card'
   if(next.customBackground?.kind==='video'&&!/^(file:|https:\/\/app\.xinhai\.local\/local\/)/.test(next.customBackground.poster))next.customBackground={...next.customBackground,poster:FALLBACK_POSTER}

@@ -12,7 +12,8 @@ const tests = [
   'check-durable-client-storage.cjs',
   'check-client-state-ipc.cjs',
   'check-theme-contrast.cjs',
-  'check-snapshot-security.cjs'
+  'check-snapshot-security.cjs',
+  'check-focus-preferences.cjs'
 ]
 for (const name of tests) {
   console.log(`\nRunning ${name}`)

@@ -5,15 +5,15 @@ import type {JournalAnalysisMode} from '../../../shared/modelConfig'
 import {COMMERCIAL_EDITION} from '../../../shared/edition'
 
 const key='xinhai-journal-draft-v1'
-type Draft={token:string;content:string;result:ScoreResult|null;adjusted:Record<DimensionId,number>|null;dupWarning:string}
+type Draft={categoryId:string|null;token:string;content:string;result:ScoreResult|null;adjusted:Record<DimensionId,number>|null;dupWarning:string}
 type State=Draft&{stage:'write'|'analyzing'|'review';analysisMode:JournalAnalysisMode|null;saving:boolean;error:string;storageError:string;message:string}
-const fresh=():Draft=>({token:crypto.randomUUID(),content:'',result:null,adjusted:null,dupWarning:''})
+const fresh=():Draft=>({categoryId:null,token:crypto.randomUUID(),content:'',result:null,adjusted:null,dupWarning:''})
 function read():Draft {
  try{
   const d=JSON.parse(localStorage.getItem(key)||'null')
   if(!d||typeof d.content!=='string'||typeof d.token!=='string')return fresh()
   const valid=d.result&&['llm','local'].includes(d.result.engine)&&typeof d.result.summary==='string'&&DIMENSIONS.every(k=>Number.isFinite(d.result.scores?.[k])&&typeof d.result.reasons?.[k]==='string'&&Number.isInteger(d.adjusted?.[k])&&d.adjusted[k]>=0&&d.adjusted[k]<=5)
-  return {token:d.token,content:d.content,result:valid?d.result:null,adjusted:valid?d.adjusted:null,dupWarning:typeof d.dupWarning==='string'?d.dupWarning:''}
+  return {categoryId:typeof d.categoryId==='string'?d.categoryId:null,token:d.token,content:d.content,result:valid?d.result:null,adjusted:valid?d.adjusted:null,dupWarning:typeof d.dupWarning==='string'?d.dupWarning:''}
  }catch{return fresh()}
 }
 const initial=read()
@@ -21,13 +21,14 @@ export const useJournal=create<State>(()=>({...initial,stage:initial.result?'rev
 function update(patch:Partial<State>):boolean {
  const next={...useJournal.getState(),...patch}
  try{
-  const {token,content,result,adjusted,dupWarning}=next
-  localStorage.setItem(key,JSON.stringify({token,content,result,adjusted,dupWarning}))
+  const {token,content,result,adjusted,dupWarning,categoryId}=next
+  localStorage.setItem(key,JSON.stringify({token,content,result,adjusted,dupWarning,categoryId}))
   useJournal.setState({...patch,storageError:''});return true
  }catch{
   useJournal.setState({...patch,storageError:'本机草稿保存失败，请先复制正文备份，避免关闭应用后丢失。'});return false
  }
 }
+export function editJournalCategory(categoryId:string|null){if(!useJournal.getState().saving)update({categoryId})}
 export function editJournal(content:string){
  if(useJournal.getState().saving||useJournal.getState().stage==='analyzing')return
  update({content,result:null,adjusted:null,stage:'write',error:'',message:'',dupWarning:''})
@@ -57,7 +58,7 @@ export async function saveJournal(){
  // Ensure the retry token survives a process restart before committing anything.
  if(!update({saving:true,error:''})){useJournal.setState({saving:false});return}
  try{
-  const saved=await window.api.commitJournal({token:s.token,content:s.content,scores:s.adjusted,summary:s.result.summary,engine:s.result.engine})
+  const saved=await window.api.commitJournal({categoryId:s.categoryId,token:s.token,content:s.content,scores:s.adjusted,summary:s.result.summary,engine:s.result.engine})
   update({...fresh(),stage:'write',saving:false,message:'日记已保存。'})
   useApp.setState(a=>({journals:[saved.journal,...a.journals.filter(j=>j.id!==saved.journal.id)]}))
   void useApp.getState().receiveGrowth(saved.growth).catch(()=>undefined)

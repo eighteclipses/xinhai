@@ -1,3 +1,4 @@
+import {resolveCategoryId} from './learningCategories'
 import type Database from 'better-sqlite3'
 import type { ReviewCard, ReviewDraft, ReviewRating } from '../shared/types'
 import { localDateKey } from '../shared/date'
@@ -19,14 +20,14 @@ export function initReview(connection:Database.Database):void {
 function card(id:string):ReviewCard {
  const r=db.prepare('SELECT * FROM review_cards WHERE id = ?').get(id) as ReviewCard|undefined
  if(!r)throw Error('复习卡不存在，请刷新列表。')
- return {...r,archived:!!r.archived}
+ return {...r,archived:!!r.archived,categoryId:(r as ReviewCard & {category_id:string|null}).category_id}
 }
 function version(c:ReviewCard,v:number){if(c.version!==v)throw Error('这张卡片已更新，请收起草稿并刷新后再操作。')}
 function string(value:unknown,max:number,required=false):string {
  if(typeof value!=='string'||value.length>max||(required&&!value.trim()))throw Error('请检查卡片内容：问题和答案不能为空，且不能超过长度限制。')
  return value.trim()
 }
-export function listReviews():ReviewCard[]{return (db.prepare('SELECT * FROM review_cards ORDER BY dueDate,createdAt,id').all() as ReviewCard[]).map(c=>({...c,archived:!!c.archived}))}
+export function listReviews():ReviewCard[]{return (db.prepare('SELECT * FROM review_cards ORDER BY dueDate,createdAt,id').all() as ReviewCard[]).map(c=>({...c,archived:!!c.archived,categoryId:(c as ReviewCard & {category_id:string|null}).category_id}))}
 export function saveReview(input:ReviewDraft):ReviewCard {
  const d={id:string(input.id,80,true),question:string(input.question,500,true),answer:string(input.answer,20000,true),topic:string(input.topic,80),sourceRoot:string(input.sourceRoot,2000),sourcePath:string(input.sourcePath,2000)}
  if(!Number.isSafeInteger(input.version)||input.version<0)throw Error('卡片版本无效。')
@@ -36,12 +37,13 @@ export function saveReview(input:ReviewDraft):ReviewCard {
   if(exists){
    const current=card(d.id)
    // A retried create request is safe, but must match the originally saved card.
-   if(input.version===0&&current.version===1&&Object.entries(d).every(([k,v])=>current[k as keyof ReviewCard]===v))return current
+   if(input.version===0&&current.version===1&&(input.categoryId??null)===(current.categoryId??null)&&Object.entries(d).every(([k,v])=>current[k as keyof ReviewCard]===v))return current
    version(current,input.version)
-   db.prepare('UPDATE review_cards SET question=@question,answer=@answer,topic=@topic,sourceRoot=@sourceRoot,sourcePath=@sourcePath,version=version+1,updatedAt=@now WHERE id=@id').run({...d,now})
+   const categoryId=resolveCategoryId(input.categoryId,current.categoryId??null)
+   db.prepare('UPDATE review_cards SET question=@question,answer=@answer,topic=@topic,sourceRoot=@sourceRoot,sourcePath=@sourcePath,category_id=@categoryId,version=version+1,updatedAt=@now WHERE id=@id').run({...d,now,categoryId})
   }else{
    if(input.version!==0)throw Error('卡片不存在，草稿已保留。')
-   db.prepare('INSERT INTO review_cards (id,question,answer,topic,sourceRoot,sourcePath,dueDate,createdAt,updatedAt) VALUES (@id,@question,@answer,@topic,@sourceRoot,@sourcePath,@dueDate,@now,@now)').run({...d,dueDate:localDateKey(),now})
+   db.prepare('INSERT INTO review_cards (id,question,answer,topic,sourceRoot,sourcePath,dueDate,createdAt,updatedAt,category_id) VALUES (@id,@question,@answer,@topic,@sourceRoot,@sourcePath,@dueDate,@now,@now,@categoryId)').run({...d,dueDate:localDateKey(),now,categoryId:resolveCategoryId(input.categoryId)})
   }
   return card(d.id)
  })()
@@ -56,7 +58,7 @@ export function rateReview(input:{id:string;version:number;rating:ReviewRating;t
   if(current.archived||current.dueDate>localDateKey())throw Error('这张卡片尚未到复习时间，请刷新列表。')
   const intervalDays=reviewInterval(current.intervalDays,input.rating),dueDate=nextReviewDate(intervalDays),now=Date.now()
   db.prepare('UPDATE review_cards SET dueDate=?,intervalDays=?,reviews=reviews+1,version=version+1,updatedAt=? WHERE id=?').run(dueDate,intervalDays,now,current.id)
-  db.prepare('INSERT INTO review_logs VALUES (?,?,?,?,?,?,?)').run(input.token,current.id,input.rating,now,current.dueDate,dueDate,intervalDays)
+  db.prepare('INSERT INTO review_logs(token,cardId,rating,ts,previousDue,nextDue,intervalDays,category_id) VALUES (?,?,?,?,?,?,?,?)').run(input.token,current.id,input.rating,now,current.dueDate,dueDate,intervalDays,current.categoryId??null)
   return card(current.id)
  })()
 }

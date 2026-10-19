@@ -7,6 +7,7 @@ import {
   type DimensionId,
   type GrowthEvent,
   type GrowthApplyResult,
+  type GrowthSummary,
   type Journal,
   type FocusSession,
   type Settings,
@@ -14,9 +15,11 @@ import {
   type Habit,
   type HabitLog,
   type FocusCommitResult,
+  type FocusRewardPresentation,
   type CalEvent
 } from '../../../shared/types'
 import { playVoiceCat } from '../lib/voice'
+import {localDateKey} from '../../../shared/date'
 
 export type PageId = 'home' | 'focus' | 'todos' | 'calendar' | 'habits' | 'journal' | 'stats' | 'history' | 'settings' | 'knowledge' | 'customize'
 
@@ -57,18 +60,24 @@ export interface GrowthPopup {
   before?: Record<DimensionId, number>
   after?: Record<DimensionId, number>
   preview?: boolean
+  noteCount?:number
 }
 
 let lastSwitchVoiceAt = 0
+let refreshGeneration=0
 
 interface AppStore extends AppState {
   dataSyncVersion:number
+  dataRevision:number
+  localDay:string
+  growthSummary:GrowthSummary|null
   dataResetVersion: number
   focusSaving: boolean
   focusPending: boolean
   knowledgeSection: 'notes' | 'review'
   focusClock: { label: string; time: string; paused: boolean } | null
   focusFinish: FocusCommitResult | null
+  focusRewardPresentation:FocusRewardPresentation|null
   todaySeconds: number
   page: PageId
   prevPage: PageId
@@ -95,6 +104,9 @@ interface AppStore extends AppState {
 
 export const useApp = create<AppStore>((set, get) => ({
   dataSyncVersion:0,
+  dataRevision:0,
+  localDay:localDateKey(),
+  growthSummary:null,
   dataResetVersion: 0,
   growthEpoch: 0,
   focusSaving: false,
@@ -104,6 +116,7 @@ export const useApp = create<AppStore>((set, get) => ({
   settings: { ...DEFAULT_SETTINGS },
   focusClock: null,
   focusFinish: null,
+  focusRewardPresentation:null,
   todaySeconds: 0,
   page: 'home',
   prevPage: 'home',
@@ -128,7 +141,8 @@ export const useApp = create<AppStore>((set, get) => ({
     }
   },
   refresh: async () => {
-    const [state, growthEvents, journals, focusSessions, todos, habits, habitLogs, events, todaySeconds] = await Promise.all([
+    const generation=++refreshGeneration
+    const [state, growthEvents, journals, focusSessions, todos, habits, habitLogs, events, todaySeconds, growthSummary] = await Promise.all([
       window.api.getState(),
       window.api.listGrowth(),
       window.api.listJournals(),
@@ -137,10 +151,11 @@ export const useApp = create<AppStore>((set, get) => ({
       window.api.habitsList(),
       window.api.habitsLogs(),
       window.api.eventsList(),
-      window.api.todayFocusSeconds()
+      window.api.todayFocusSeconds(),
+      window.api.growthSummary()
     ])
-    if((state.growthEpoch??0)<get().growthEpoch)return
-    set({ ...state, growthEvents, journals, focusSessions, todos, habits, habitLogs, events, todaySeconds })
+    if(generation!==refreshGeneration||(state.growthEpoch??0)<get().growthEpoch)return
+    set(s=>({ ...state, growthEvents, journals, focusSessions, todos, habits, habitLogs, events, todaySeconds, growthSummary,localDay:growthSummary.date,dataRevision:s.dataRevision+1 }))
   },
   setSettings: async (patch) => {
     const settings = await window.api.updateSettings(patch)

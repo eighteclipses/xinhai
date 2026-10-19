@@ -1,19 +1,25 @@
+import {CATEGORY_TABLES,isCategoryId,validateCategoryInput} from './learningCategories'
 import type Database from 'better-sqlite3'
 import {DIMENSIONS} from './types'
 import type {SyncPacket,SyncRecord,SyncRegister,SyncVector,SyncConflict} from './lanSyncTypes'
+import {reconcileFocusRewards,readFocusRewardState} from './focusRewards'
 
 type Row=Record<string,any>
 type Stored={table_name:string;uid:string;local_id:string|null;doc_json:string;snapshot_json:string}
 type Spec={key:string;columns:string[];counters?:string[];text?:string[]}
 const specs:Record<string,Spec>={
- habits:{key:'id',columns:['name','dimension','weekly_target','sort_order','deleted_at'],text:['name']},
- todos:{key:'id',columns:['title','priority','date','est_pomos','done','focus_minutes','created_at','completed_at'],counters:['focus_minutes'],text:['title']},
- focus_sessions:{key:'id',columns:['started_at','ended_at','minutes','seconds','mode','task_label','sync_token']},
- journals:{key:'id',columns:['ts','content','scores_json','summary','engine'],text:['content','summary']},
- events:{key:'id',columns:['title','date','kind'],text:['title']},
- review_cards:{key:'id',columns:['question','answer','topic','sourcePath','dueDate','intervalDays','reviews','archived','createdAt','updatedAt'],counters:['reviews'],text:['question','answer','topic']},
- habit_logs:{key:'id',columns:['habit_id','date','ts']},
- review_logs:{key:'token',columns:['cardId','rating','ts','previousDue','nextDue','intervalDays']},
+ learning_categories:{key:'id',columns:['name','color','sort_order','archived_at','created_at','updated_at'],text:['name']},
+ habits:{key:'id',columns:['category_id','name','dimension','weekly_target','sort_order','deleted_at'],text:['name']},
+ todos:{key:'id',columns:['category_id','title','priority','date','est_pomos','done','focus_minutes','created_at','completed_at'],counters:['focus_minutes'],text:['title']},
+ focus_sessions:{key:'id',columns:['category_id','started_at','ended_at','minutes','seconds','mode','task_label','sync_token']},
+ focus_reward_sessions:{key:'token',columns:['seconds','ended_at']},
+ focus_reward_blocks:{key:'id',columns:['ts']},
+ focus_reward_presentations:{key:'token',columns:['block_ids','session_tokens','ts','acknowledged'],counters:['acknowledged']},
+ journals:{key:'id',columns:['category_id','ts','content','scores_json','summary','engine'],text:['content','summary']},
+ events:{key:'id',columns:['category_id','title','date','kind'],text:['title']},
+ review_cards:{key:'id',columns:['category_id','question','answer','topic','sourcePath','dueDate','intervalDays','reviews','archived','createdAt','updatedAt'],counters:['reviews'],text:['question','answer','topic']},
+ habit_logs:{key:'id',columns:['category_id','habit_id','date','ts']},
+ review_logs:{key:'token',columns:['category_id','cardId','rating','ts','previousDue','nextDue','intervalDays']},
  growth_events:{key:'id',columns:['ts','dimension','points','source','reason']},
  balances:{key:'id',columns:[...DIMENSIONS]}
 }
@@ -52,6 +58,10 @@ export class LanSyncEngine {
  private ref(table:string,id:unknown):string {const r=this.findLocal(table,id);if(!r)throw Error('同步引用缺失，请重试。');return r.uid}
  private uid(table:string,row:Row):string {
   if(table==='habits') {const i=Number(row.id)-1;if(defaultHabits[i]?.[0]===row.name&&defaultHabits[i]?.[1]===row.dimension&&row.weekly_target===7)return 'default-habit-'+(i+1)}
+  if(table==='learning_categories')return 'category:'+row.id
+  if(table==='focus_reward_sessions')return 'focus-reward-session:'+encodeURIComponent(row.token)
+  if(table==='focus_reward_blocks')return 'focus-reward-block:'+row.id
+  if(table==='focus_reward_presentations')return 'focus-reward-presentation:'+encodeURIComponent(row.token)
   if(table==='review_cards')return 'card:'+encodeURIComponent(row.id)
   if(table==='review_logs')return 'review:'+encodeURIComponent(row.token)
   if(table==='habit_logs')return 'punch:'+this.ref('habits',row.habit_id)+':'+row.date
@@ -90,7 +100,9 @@ export class LanSyncEngine {
     const doc:SyncRecord=existing?JSON.parse(existing.doc_json):{table,uid,fields:{},deleted:initial(false)}
     let changed=!existing
     for(const [field,value] of Object.entries(canonical)){
-     if(previous&&same(value,previous[field]))continue
+     // Legacy v1 documents have no category register. Equal NULL snapshots must
+     // still acquire that additive field before the next strict v2 packet.
+     if(previous&&same(value,previous[field])&&(spec.counters?.includes(field)?Object.keys(doc.fields).some(k=>k.startsWith(field+'@')):Object.hasOwn(doc.fields,field)))continue
      if(spec.counters?.includes(field)){
       const key=field+'@'+this.deviceId,part=doc.fields[key]?.value??0,delta=Number(value)-Number(previous?.[field]??0)
       doc.fields[key]=initial(Number(part)+delta)
@@ -122,19 +134,30 @@ export class LanSyncEngine {
  })()}
  packet(known:SyncVector={}):SyncPacket {
   this.capture()
-  return {version:1,device:this.deviceId,vector:{...this.vector},records:this.rows().map(r=>JSON.parse(r.doc_json) as SyncRecord).filter(r=>[r.deleted,...Object.values(r.fields)].some(s=>s.device==='seed'||s.clock>(known[s.device]??0)))}
+  return {version:3,device:this.deviceId,vector:{...this.vector},records:this.rows().map(r=>JSON.parse(r.doc_json) as SyncRecord).filter(r=>[r.deleted,...Object.values(r.fields)].some(s=>s.device==='seed'||s.clock>(known[s.device]??0)))}
  }
  private validate(input:unknown):SyncPacket {
   if(!input||typeof input!=='object')throw Error('同步数据格式无效。')
   const p=input as SyncPacket
   const id=(v:unknown,max=512)=>typeof v==='string'&&v.length>0&&v.length<=max&&!/[\u0000-\u001f]/.test(v)
   const vector=(v:unknown):v is SyncVector=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.entries(v).length<=100&&Object.entries(v).every(([k,n])=>id(k,80)&&Number.isSafeInteger(n)&&n>=0&&n<1e12)
-  if(p.version!==1||!id(p.device,80)||!vector(p.vector)||!Array.isArray(p.records)||p.records.length>50000)throw Error('同步版本或数据范围无效。')
+  if(![1,2,3].includes(p.version)||!id(p.device,80)||!vector(p.vector)||!Array.isArray(p.records)||p.records.length>50000)throw Error('同步版本或数据范围无效。')
   const seen=new Set<string>()
   for(const r of p.records){
    const spec=Object.hasOwn(specs,r?.table)?specs[r.table]:undefined;if(!spec||!id(r.uid)||!r.fields||typeof r.fields!=='object'||Array.isArray(r.fields)||Object.keys(r.fields).length>150)throw Error('同步记录无效。')
+   if(p.version===1&&(r.table==='learning_categories'||Object.hasOwn(r.fields,'category_id')))throw Error('旧版同步包不能携带学习分类字段。')
+   if(r.table==='focus_reward_sessions'){
+    const token=decodeURIComponent(r.uid.slice(21))
+    if(!id(token,160)||r.uid!=='focus-reward-session:'+encodeURIComponent(token))throw Error('专注音符同步标识无效。')
+   }
+   if(r.table==='focus_reward_blocks'&&!/^focus-reward-block:[1-9]\d{0,6}$/.test(r.uid))throw Error('专注音符同步标识无效。')
+   if(r.table==='focus_reward_presentations'){
+    const token=decodeURIComponent(r.uid.slice(26));if(!id(token,160)||r.uid!=='focus-reward-presentation:'+encodeURIComponent(token))throw Error('音符演出同步标识无效。')
+   }
+   if(p.version<3&&r.table.startsWith('focus_reward_'))throw Error('旧版同步包不能携带专注音符账本。')
+   if(r.table==='learning_categories'&&(!r.uid.startsWith('category:')||!isCategoryId(r.uid.slice(9))))throw Error('分类同步标识无效。')
    const key=r.table+'|'+r.uid;if(seen.has(key))throw Error('同步记录重复。');seen.add(key)
-   const expected=spec.columns.filter(k=>!(r.table==='review_cards'&&['dueDate','intervalDays','updatedAt'].includes(k)))
+   const expected=spec.columns.filter(k=>!(p.version===1&&k==='category_id')&&!(r.table==='review_cards'&&['dueDate','intervalDays','updatedAt'].includes(k)))
    if(r.table==='review_cards')expected.push('schedule')
    for(const name of expected)if(spec.counters?.includes(name)?!Object.keys(r.fields).some(k=>k.startsWith(name+'@')):!r.fields[name])throw Error('同步记录缺少字段。')
    for(const [name,reg] of [...Object.entries(r.fields),['$deleted',r.deleted] as [string,SyncRegister]]){
@@ -142,24 +165,45 @@ export class LanSyncEngine {
     const counter=spec.counters?.find(c=>name.startsWith(c+'@'))
     if(name!=='$deleted'&&!expected.includes(name)&&!counter)throw Error('同步字段无效。')
     if(counter&&!id(name.slice(counter.length+1),80))throw Error('计数字段无效。')
-    if(name==='$deleted'){if(typeof reg.value!=='boolean')throw Error('删除标记无效。');continue}
+    if(name==='$deleted'){if(typeof reg.value!=='boolean')throw Error('删除标记无效。');if((r.table==='learning_categories'||r.table.startsWith('focus_reward_'))&&reg.value)throw Error('分类与音符账本不能删除。');continue}
     const value=reg.value
     if(!counter&&name!=='schedule'){
-     const numeric=new Set(['weekly_target','sort_order','deleted_at','priority','est_pomos','done','created_at','completed_at','started_at','ended_at','minutes','seconds','ts','archived','createdAt','intervalDays','points',...DIMENSIONS])
-     const nullable=['deleted_at','completed_at','seconds','sync_token'].includes(name)
+     const numeric=new Set(['weekly_target','sort_order','archived_at','updated_at','deleted_at','priority','est_pomos','done','created_at','completed_at','started_at','ended_at','minutes','seconds','ts','archived','createdAt','intervalDays','points',...DIMENSIONS])
+     const nullable=['deleted_at','completed_at','seconds','sync_token','archived_at','category_id'].includes(name)
      if(value===null&&!nullable)throw Error('同步字段不能为空。')
      if(value!==null&&(numeric.has(name)?typeof value!=='number':typeof value!=='string'))throw Error('同步字段类型不符。')
     }
-    if(counter){if(!Number.isSafeInteger(value)||Math.abs(Number(value))>1e9)throw Error('同步计数无效。');continue}
+    if(counter){if(!Number.isSafeInteger(value)||Math.abs(Number(value))>1e9||(r.table==='focus_reward_presentations'&&Number(value)<0))throw Error('同步计数无效。');continue}
     if(name==='schedule'){const v=value as Row;if(!v||typeof v.dueDate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(v.dueDate)||!Number.isInteger(v.intervalDays)||v.intervalDays<0||v.intervalDays>3650||!Number.isFinite(v.updatedAt))throw Error('复习安排无效。');continue}
     if(value!==null&&typeof value!=='string'&&typeof value!=='number')throw Error('同步字段类型无效。')
     if(typeof value==='number'&&(!Number.isFinite(value)||Math.abs(value)>1e15))throw Error('同步数字无效。')
     if(typeof value==='string'&&value.length>200000)throw Error('同步文字过长。')
+    if(name==='category_id'&&value!==null&&!isCategoryId(value))throw Error('学习分类引用无效。')
+    if(r.table==='learning_categories'&&['sort_order','archived_at','created_at','updated_at'].includes(name)&&value!==null&&(!Number.isSafeInteger(value)||Number(value)<0||(name==='sort_order'&&Number(value)>1000000)))throw Error('分类数值无效。')
     if(name==='dimension'&&!DIMENSIONS.includes(value as any))throw Error('成长维度无效。')
     if(name==='points'&&(!Number.isFinite(value)||Number(value)<0||Number(value)>1000000))throw Error('成长分值无效。')
     if(name==='scores_json'){try{const scores=JSON.parse(String(value));if(!scores||DIMENSIONS.some(d=>!Number.isFinite(scores[d])||scores[d]<0))throw Error()}catch{throw Error('日记评分无效。')}}
    }
+   if(r.table==='learning_categories')validateCategoryInput({id:r.uid.slice(9),name:r.fields.name.value as string,color:r.fields.color.value as string})
+   if(r.table==='focus_reward_sessions'&&(!Number.isSafeInteger(r.fields.seconds.value)||Number(r.fields.seconds.value)<0||Number(r.fields.seconds.value)>604800||!Number.isSafeInteger(r.fields.ended_at.value)||Number(r.fields.ended_at.value)<0))throw Error('专注音符累计时长无效。')
+   if(r.table==='focus_reward_sessions'){
+    const local=this.db.prepare('SELECT seconds,ended_at FROM focus_reward_sessions WHERE token=?').get(decodeURIComponent(r.uid.slice(21))) as {seconds:number;ended_at:number}|undefined
+    if(local&&(local.seconds!==r.fields.seconds.value||local.ended_at!==r.fields.ended_at.value))throw Error('同一专注音符贡献的时长不能被改写。')
+    const existing=this.findUid(r.table,r.uid)
+    if(existing){const previous=JSON.parse(existing.doc_json) as SyncRecord;if(['seconds','ended_at'].some(field=>!same(previous.fields[field].value,r.fields[field].value)))throw Error('同一专注音符贡献的时长不能被改写。')}
+   }
+   if(r.table==='focus_reward_presentations'){
+    for(const field of ['block_ids','session_tokens']){const value=JSON.parse(String(r.fields[field].value));if(!Array.isArray(value)||value.length>1_000_000||new Set(value).size!==value.length||value.some(item=>!id(item,160))||(field==='block_ids'&&(!value.length||value.some(item=>!/^[1-9]\d{0,6}$/.test(item)))))throw Error('音符演出回执无效。')}
+    const local=this.db.prepare('SELECT block_ids,session_tokens,ts FROM focus_reward_presentations WHERE token=?').get(decodeURIComponent(r.uid.slice(26))) as Row|undefined
+    if(local&&['block_ids','session_tokens','ts'].some(field=>!same(local[field],r.fields[field].value)))throw Error('同一音符演出回执不能被改写。')
+   }
+   if(r.table==='growth_events'&&r.uid.startsWith('growth:focus%3Areward-v1%3A')){
+    if(p.version<3||!/^growth:focus%3Areward-v1%3A[1-9]\d{0,6}:knowledge$/.test(r.uid)||r.fields.points.value!==1||r.fields.dimension.value!=='knowledge'||r.fields.source.value!=='focus')throw Error('专注音符事件身份无效。')
+   }
   }
+  const categories=new Set((this.db.prepare('SELECT id FROM learning_categories').all() as Array<{id:string}>).map(row=>row.id))
+  for(const r of p.records)if(r.table==='learning_categories')categories.add(r.uid.slice(9))
+  for(const r of p.records){const category=r.fields.category_id?.value;if(category!==undefined&&category!==null&&!categories.has(category as string))throw Error('学习分类引用缺失，同步已拒绝。')}
   return p
  }
  private conflict(table:string,uid:string,field:string,a:SyncRegister,b:SyncRegister){
@@ -200,19 +244,28 @@ export class LanSyncEngine {
     if(table==='review_cards'){Object.assign(row,row.schedule);delete row.schedule}
     if(table==='habit_logs'){const parent=this.findUid('habits',String(row.habit_id));if(parent?.local_id==null)throw Error('打卡缺少所属习惯，同步已回滚。');row.habit_id=Number(parent.local_id)}
     if(table==='review_logs'){const parent=this.findUid('review_cards',String(row.cardId));if(parent?.local_id==null)throw Error('复习记录缺少卡片，同步已回滚。');row.cardId=parent.local_id}
+    if(CATEGORY_TABLES.includes(table as never)&&row.category_id!==undefined&&row.category_id!==null&&!this.db.prepare('SELECT 1 FROM learning_categories WHERE id=?').get(row.category_id))throw Error('学习分类引用缺失，同步已回滚。')
     if(table==='review_cards')row.sourceRoot=before?.sourceRoot??''
     const different=!before||Object.entries(row).some(([k,v])=>!same(v,before[k]))
     if(different){
      if(table==='review_cards')row.version=Number(before?.version??0)+1
      if(before){const cols=Object.keys(row);this.db.prepare(`UPDATE ${table} SET ${cols.map(k=>'"'+k+'"=?').join(',')} WHERE ${spec.key}=?`).run(...cols.map(k=>row[k]),stored.local_id)}
      else{
-      if(stored.local_id!==null)row[spec.key]=spec.key==='token'||table==='review_cards'?stored.local_id:Number(stored.local_id)
+      if(stored.local_id!==null)row[spec.key]=spec.key==='token'||table==='review_cards'||table==='learning_categories'||table==='focus_reward_blocks'?stored.local_id:Number(stored.local_id)
+      else if(table==='learning_categories')row.id=doc.uid.slice(9)
       else if(table==='review_cards')row.id=decodeURIComponent(doc.uid.slice(5))
       else if(table==='review_logs')row.token=decodeURIComponent(doc.uid.slice(7))
+      else if(table==='focus_reward_sessions')row.token=decodeURIComponent(doc.uid.slice(21))
+      else if(table==='focus_reward_blocks')row.id=doc.uid.slice(19)
+      else if(table==='focus_reward_presentations')row.token=decodeURIComponent(doc.uid.slice(26))
       const cols=Object.keys(row),result=this.db.prepare(`INSERT INTO ${table} (${cols.map(k=>'"'+k+'"').join(',')}) VALUES (${cols.map(()=>'?').join(',')})`).run(...cols.map(k=>row[k]))
       stored.local_id=String(row[spec.key]??result.lastInsertRowid)
      }
      changes++
+    }
+    if(table==='growth_events'&&doc.uid.startsWith('growth:focus%3Areward-v1%3A')){
+      const cause=decodeURIComponent(doc.uid.slice(7,doc.uid.lastIndexOf(':')))
+      this.db.prepare('UPDATE growth_events SET sync_cause=? WHERE id=?').run(cause,stored.local_id)
     }
     stored.snapshot_json=JSON.stringify(this.canonical(table,row));this.put(stored)
    }
@@ -223,6 +276,8 @@ export class LanSyncEngine {
   for(const d of DIMENSIONS)points[d]=Math.max(0,points[d])
   const old=JSON.parse((this.db.prepare('SELECT points_json FROM stats WHERE id=1').get() as Row).points_json)
   if(!same(points,old)){this.db.prepare('UPDATE stats SET points_json=? WHERE id=1').run(JSON.stringify(points));changes++}
+  if(reconcileFocusRewards(this.db).events.length)changes++
+  readFocusRewardState(this.db)
   if(changes)this.db.exec('UPDATE growth_meta SET epoch=epoch+1 WHERE id=1')
   return changes
  }

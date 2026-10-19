@@ -47,4 +47,14 @@ for (const config of ['electron.vite.config.ts', 'vite.mobile.config.ts']) {
 }
 for (const name of ['deep-sea', 'forest-dawn', 'orbital-night']) assert(fs.existsSync(path.join(root, `src/renderer/public/backgrounds/originals/${name}.svg`)))
 assert(!fs.readFileSync(path.join(root, 'src/renderer/src/components/CharacterLayer.tsx'), 'utf8').includes('resources/assets/'))
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'docs/source-manifest.json'), 'utf8'))
+assert.equal(manifest.snapshot, pkg.version)
+assert.equal(manifest.fileCount, manifest.files.length)
+assert.deepEqual(manifest.files.map(entry => entry.path).sort(), files.map(file => path.relative(root, file).replaceAll('\\', '/')).filter(file => file !== 'docs/source-manifest.json').sort(), 'Manifest must include every published source input')
+for (const entry of manifest.files) {
+  assert(!entry.path.includes('..') && !path.isAbsolute(entry.path))
+  const data = fs.readFileSync(path.join(root, entry.path))
+  assert.equal(data.length, entry.bytes, `Manifest length: ${entry.path}`)
+  assert.equal(crypto.createHash('sha256').update(data).digest('hex'), entry.sha256, `Manifest hash: ${entry.path}`)
+}
 console.log(`PASS source file scope (${files.length} files), license, private input scan, isolated profile and media-free build entries`)

@@ -10,7 +10,7 @@ export default defineConfig({
   main: { plugins: [externalizeDepsPlugin()], define },
   preload: { plugins: [externalizeDepsPlugin()], define },
   renderer: {
-    plugins: [react()],
+    plugins: [react(), {name:'source-notices',resolveId(id:string){if(id==='virtual:xinhai-notices')return '\0source-notices'},load(id:string){if(id==='\0source-notices')return 'export default '+JSON.stringify('{}')}}],
     define,
     resolve: { alias: { '@': resolve('src/renderer/src') } }
   }

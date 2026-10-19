@@ -1,5 +1,7 @@
-import { COMMERCIAL_EDITION } from './edition'
+import { COMMERCIAL_EDITION, PERSONAL_EDITION } from './edition'
+import { personalAppearancePatch } from './personalAppearance'
 import type { WallpaperItem, SavedTheme } from './themeLibrary'
+import type { HomeLayouts } from './homeLayout'
 export type DimensionId = 'knowledge' | 'will' | 'expression' | 'care' | 'craft'
 
 export const DIMENSIONS: DimensionId[] = ['knowledge', 'will', 'expression', 'care', 'craft']
@@ -53,6 +55,7 @@ export function nextThreshold(points: number): number | null {
 export type GrowthSource = 'focus' | 'journal' | 'snapshot' | 'habit'
 
 export interface Todo {
+  categoryId?: string | null
   id: number
   title: string
   priority: number
@@ -63,8 +66,10 @@ export interface Todo {
   createdAt: number
   completedAt?: number | null
 }
+export type TodoUpdateInput = Pick<Todo,'id'|'title'|'priority'|'date'|'estPomos'|'categoryId'>
 
 export interface Habit {
+  categoryId?: string | null
   id: number
   name: string
   dimension: DimensionId
@@ -72,13 +77,16 @@ export interface Habit {
 }
 
 export interface HabitLog {
+  categoryId?: string | null
   id: number
   habitId: number
   date: string
   ts: number
 }
+export type HabitUpdateInput = Pick<Habit,'id'|'name'|'dimension'|'weeklyTarget'|'categoryId'>
 
 export interface CalEvent {
+  categoryId?: string | null
   id: number
   title: string
   date: string
@@ -91,6 +99,7 @@ export const EVENT_COLORS: Record<CalEvent['kind'], string> = {
   截止: '#FABA80',
   学习: '#93CC96'
 }
+export type CalendarEventUpdateInput = CalEvent
 
 export interface GrowthEvent {
   id: number
@@ -100,8 +109,17 @@ export interface GrowthEvent {
   source: GrowthSource
   reason: string
 }
+export const GROWTH_SOURCE_NAMES:Record<GrowthSource,string>={focus:'专注',journal:'日记',snapshot:'即时拍',habit:'习惯'}
+export interface GrowthSummary {
+  date:string
+  recentByDimension:Record<DimensionId,GrowthEvent[]>
+  activeDimensions:DimensionId[]
+  todayEventCount:number
+  todayMaxPoints:number
+}
 
 export interface FocusSession {
+  categoryId?: string | null
   id: number
   startedAt: number
   endedAt: number
@@ -109,6 +127,13 @@ export interface FocusSession {
   seconds?: number // Legacy rows have minute precision.
   mode: string
   taskLabel: string
+}
+
+export interface FocusTaskSummary {
+  totalSeconds: number
+  sessionCount: number
+  legacySessionCount: number
+  tasks: Array<{ taskLabel: string; seconds: number; sessionCount: number; lastEndedAt: number; legacySessionCount: number }>
 }
 
 export interface EvidenceItem {
@@ -130,6 +155,7 @@ export interface ScoreResult {
 }
 
 export interface Journal {
+  categoryId?: string | null
   id: number
   ts: number
   content: string
@@ -138,7 +164,12 @@ export interface Journal {
   engine: 'llm' | 'local'
 }
 
+export interface JournalCursor { ts:number; id:number }
+export interface JournalPageQuery { categoryId?:string|null; query?:string; cursor?:JournalCursor|null; limit?:number }
+export interface JournalPage { items:Journal[]; total:number; matchedTotal:number; nextCursor:JournalCursor|null }
+
 export interface JournalCommitInput {
+  categoryId?: string | null
   token: string
   content: string
   scores: Record<DimensionId, number>
@@ -147,11 +178,15 @@ export interface JournalCommitInput {
 }
 export interface JournalCommitResult { journal: Journal; growth: GrowthApplyResult }
 
-export type BackgroundId = 'original-deep-sea' | 'original-forest-dawn' | 'original-orbital-night' | 'masq-aigis-red' | 'masq-aigis-gold' | 'masq-makoto' | 'masq-yukari' | 'rain-aigis' | 'rain-makoto' | 'rain-yukari' | 'makoto-blue' | 'makoto-yuki-4k' | 'blue4k' | 'stream' | 'train-night' | 'train-day' | 'classroom' | 'classroom-window' | 'sea' | 'custom'
+export type BackgroundId = 'original-deep-sea' | 'original-forest-dawn' | 'original-orbital-night' | 'masq-aigis-red' | 'masq-aigis-gold' | 'masq-makoto' | 'masq-yukari' | 'rain-aigis' | 'rain-makoto' | 'rain-yukari' | 'makoto-blue' | 'makoto-yuki-4k' | 'blue4k' | 'stream' | 'train-night' | 'train-day' | 'classroom' | 'classroom-window' | 'moon-on-water-loop' | 'moon-colonnade-ai' | 'moon-courtyard-ai' | 'sea' | 'custom'
 
 export interface CustomBackground { id?:string; name:string; src:string; kind:'image'|'video'; poster:string; themeColor?:string }
 
 export interface Settings {
+  focusPanelLayout: { x:number; y:number; scale:number } | null
+  focusBackgroundBehavior: 'wait' | 'continue'
+  focusRewardPresentation: 'round' | 'batch'
+  homeLayouts: HomeLayouts
   wallpaperLibrary: WallpaperItem[]
   savedThemes: SavedTheme[]
   sceneTransition: 'fade' | 'arc' | 'none'
@@ -159,6 +194,7 @@ export interface Settings {
   wallpaperMotion: boolean
   themeMode: 'wallpaper' | 'fixed'
   themeColor: string
+  wallpaperThemeColors: Record<string, string>
   autoSceneEnabled: boolean
   autoSceneIntervalSeconds: number
   autoSceneMode: 'random' | 'sequence'
@@ -192,15 +228,21 @@ export interface Settings {
   panelOpacity: number
   panelBlur: number
   wallpaperDim: number
-  characterStyle: 'auto' | 'seated' | 'uniform' | 'battle' | 'hidden'
+  characterStyle: 'auto' | 'seated' | 'uniform' | 'battle' | 'gallery' | 'hidden'
+  characterArtId: string
   characterOpacity: number
   characterScale: number
+  characterPosition: import('./characterPlacement').CharacterPosition | null
   timerPosition: 'center' | 'left' | 'right' | 'bottom'
   wallpaperClock: boolean
   knowledgePath: string
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  focusPanelLayout: null,
+  focusBackgroundBehavior: 'wait',
+  focusRewardPresentation: 'batch',
+  homeLayouts: { version: 2 },
   wallpaperLibrary: [],
   savedThemes: [],
   sceneTransition: COMMERCIAL_EDITION ? 'fade' : 'arc',
@@ -208,10 +250,11 @@ export const DEFAULT_SETTINGS: Settings = {
   wallpaperMotion: COMMERCIAL_EDITION,
   themeMode: 'wallpaper',
   themeColor: COMMERCIAL_EDITION ? '#67ddd1' : '#21bce7',
+  wallpaperThemeColors: {},
   autoSceneEnabled: false,
   autoSceneIntervalSeconds: 300,
   autoSceneMode: 'random',
-  autoSceneIds: ['original-deep-sea','original-forest-dawn','original-orbital-night'],
+  autoSceneIds: COMMERCIAL_EDITION ? ['original-deep-sea','original-forest-dawn','original-orbital-night'] : ['masq-aigis-red','masq-aigis-gold','masq-makoto','masq-yukari','rain-aigis','rain-makoto','rain-yukari'],
   autoSceneFocus: true,
   autoSceneWallpaper: true,
   autoSceneOther: false,
@@ -231,21 +274,25 @@ export const DEFAULT_SETTINGS: Settings = {
   reduceMotion: false,
   focusAlloutEnabled: false,
   particles: true,
-  showCharacter: false,
-  background: 'original-deep-sea',
-  pageBackgrounds: false,
+  showCharacter: !COMMERCIAL_EDITION,
+  background: COMMERCIAL_EDITION ? 'original-deep-sea' : 'train-night',
+  pageBackgrounds: !COMMERCIAL_EDITION,
   voiceEnabled: false,
   autoPlayMusic: false,
   voiceSwitchCooldown: 60,
   panelOpacity: COMMERCIAL_EDITION ? .58 : .46,
   panelBlur: COMMERCIAL_EDITION ? 8 : 4,
   wallpaperDim: 0.08,
-  characterStyle: 'hidden',
+  characterStyle: COMMERCIAL_EDITION ? 'hidden' : 'auto',
+  characterArtId: '',
   characterOpacity: 1,
   characterScale: 1,
+  characterPosition: null,
   timerPosition: 'center',
   wallpaperClock: true,
-  knowledgePath: ''
+  knowledgePath: '',
+  // Existing databases merge their saved values over these new-install defaults.
+  ...(PERSONAL_EDITION && !COMMERCIAL_EDITION ? personalAppearancePatch() : {})
 }
 
 export interface AppState {
@@ -266,6 +313,7 @@ export interface GrowthApplyResult {
 }
 
 export interface FocusCommitInput {
+  categoryId?: string | null
   token: string
   startedAt: number
   endedAt: number
@@ -278,7 +326,10 @@ export interface FocusCommitResult {
   session: FocusSession
   growth: GrowthApplyResult
   before: Record<DimensionId, number>
+  rewardState?: FocusRewardState
 }
+export interface FocusRewardState {earnedNotes:number;pendingNotes:number;remainderSeconds:number}
+export interface FocusRewardPresentation {token:string;blockIds:string[];notes:number;before:Record<DimensionId,number>;after:Record<DimensionId,number>}
 export function formatDuration(seconds: number): string {
   const total = Math.max(0, Math.floor(seconds))
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
@@ -293,15 +344,17 @@ export function radarRadius(points: number): number {
   return Math.min(1, (levelOf(points) + dimensionProgress(points)) / 5)
 }
 
-export interface KnowledgeNote { path:string; title:string; content:string; revision:string; modifiedAt:number }
+export interface KnowledgeNote { path:string; title:string; content:string; revision:string; modifiedAt:number; categoryId?:string|null }
 export interface KnowledgeVault { root:string; notes:KnowledgeNote[]; skipped:number }
+export interface KnowledgeNoteTarget { path:string; revision:string; expectedRoot:string }
 
 export type ReviewRating = 'again' | 'familiar' | 'remembered'
 export interface ReviewCard {
+  categoryId?:string|null
   id:string; question:string; answer:string; topic:string; sourceRoot:string; sourcePath:string
   dueDate:string; intervalDays:number; reviews:number; archived:boolean; version:number
   createdAt:number; updatedAt:number
 }
-export type ReviewDraft = Pick<ReviewCard,'id'|'question'|'answer'|'topic'|'sourceRoot'|'sourcePath'|'version'>
+export type ReviewDraft = Pick<ReviewCard,'id'|'question'|'answer'|'topic'|'sourceRoot'|'sourcePath'|'version'|'categoryId'>
 
-export interface CalendarEntry { id:string; date:string; kind:'todo'|'habit'|'journal'|'focus'|'event'; title:string; detail:string; ts?:number; state?:string }
+export interface CalendarEntry { categoryId?:string|null; id:string; date:string; kind:'todo'|'habit'|'journal'|'focus'|'event'; title:string; detail:string; ts?:number; state?:string; durationSeconds?:number }

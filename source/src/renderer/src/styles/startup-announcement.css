@@ -1,0 +1,69 @@
+.startup-announcement {
+  --announcement-accent: #85d8ff;
+  margin: auto; inset: 0;
+  width: min(920px, calc(100vw - 40px)); height: min(760px, calc(100dvh - 40px));
+  max-width: none; max-height: none; padding: 0; border: 1px solid #477088; border-radius: 22px;
+  color: #f3f8fc; background: #0d2030; box-shadow: 0 28px 100px #0009; overflow: hidden;
+  font-family: var(--font-ui, sans-serif); text-align: left; -webkit-app-region: no-drag;
+}
+.startup-announcement[open] { display: flex; flex-direction: column; }
+.startup-announcement::backdrop { background: #020914b8; backdrop-filter: blur(9px); }
+.startup-announcement button { font: inherit; cursor: pointer; letter-spacing: normal; }
+.startup-announcement button:focus-visible, .startup-announcement a:focus-visible, .startup-announcement input:focus-visible, .announcement-content:focus-visible { outline: 3px solid #ffe09a; outline-offset: -3px; }
+.announcement-heading { display: flex; justify-content: space-between; gap: 20px; padding: 28px 32px 22px; background: radial-gradient(ellipse at right top, #235a78 0%, transparent 75%); }
+.announcement-kicker { color: #9bc7dd; font-size: 11px; letter-spacing: .16em; }
+.announcement-heading h1 { font-size: clamp(22px, 3vw, 30px); margin: 11px 0 10px; font-weight: 700; line-height: 1.4; }
+.announcement-heading p { color: #c0d9e7; font-size: 13px; margin: 0; }
+.announcement-heading p span { color: #91adbf; }
+.announcement-close { flex: 0 0 42px; height: 42px; border-radius: 50%; border: 1px solid #7796a966; background: #0b1b2c80; color: white; font-size: 26px !important; }
+.announcement-tabs { display: flex; flex-shrink: 0; padding: 0 28px; border-bottom: 1px solid #345061; gap: 22px; }
+.announcement-tabs button { color: #b4cada; background: transparent; border: 0; border-bottom: 3px solid transparent; padding: 14px 4px; font-size: 14px; }
+.announcement-tabs button[aria-pressed=true] { color: #fff; border-color: var(--announcement-accent); }
+.announcement-content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 26px 32px; line-height: 1.9; font-size: 15px; }
+.announcement-content h2 { color: #f3f8fc; font-size: 20px; line-height: 1.5; margin: 0 0 16px; }
+.announcement-content p { margin: 0 0 16px; }
+.announcement-eyebrow { display: block; color: var(--announcement-accent); font-size: 12px; margin-bottom: 8px; }
+.announcement-muted { color: #adc2d0; font-size: 13px; }
+.announcement-latest { border-left: 3px solid #85d8ff; background: #173346; padding: 15px 20px; border-radius: 0 12px 12px 0; margin: 22px 0 18px; }
+.announcement-latest > span { font-weight: 700; color: #a7e3ff; }
+.announcement-latest ul { margin: 8px 0 0; padding-left: 20px; font-size: 14px; }
+.announcement-signature { text-align: right; color: #adc2d0; font-size: 13px; }
+.announcement-history { padding: 0; margin: 0; list-style: none; }
+.announcement-history li { border-bottom: 1px solid #294455; padding: 14px 0; }
+.announcement-history li > div { display: flex; align-items: center; gap: 12px; }
+.announcement-history strong { color: #a7e3ff; font-size: 18px; }
+.announcement-history li span { font-size: 11px; color: #bbd0dc; border: 1px solid #496575; padding: 0 8px; border-radius: 20px; }
+.announcement-history li p { margin: 6px 0 0; font-size: 14px; }
+.announcement-credits { list-style: none; padding: 0; margin: 20px 0; }
+.announcement-credits li { border-bottom: 1px solid #294455; padding: 12px 0; font-size: 14px; overflow-wrap: anywhere; }
+.announcement-credits a { color: #b0e7ff; text-decoration: none; }
+.announcement-credits a:hover { text-decoration: underline; }
+.announcement-payments { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 570px; margin: 20px auto 0; }
+.announcement-payments figure { margin: 0; text-align: center; }
+.announcement-payments figcaption { margin-bottom: 10px; font-weight: 600; }
+.announcement-payments button { display: flex; justify-content: center; width: 100%; padding: 0; border: 0; background: transparent; border-radius: 12px; overflow: hidden; }
+.announcement-payments img { display: block; width: auto; max-width: 100%; height: auto; max-height: 240px; border-radius: 12px; }
+.announcement-support > p { margin-bottom: 10px; }
+@media (min-height: 950px) { .announcement-payments img { max-height: 320px; } }
+.announcement-payments figure > span { color: #adc2d0; font-size: 12px; }
+.announcement-payment-expanded { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.announcement-payment-expanded img { width: min(100%, 480px); height: auto; border-radius: 12px; }
+.announcement-text-button { background: transparent; color: #b0e7ff; border: 0; padding: 10px; }
+.announcement-footer { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 18px; border-top: 1px solid #345061; padding: 18px 28px; background: #0b1b29; }
+.announcement-footer label { display: flex; align-items: center; gap: 9px; color: #d6e5ee; font-size: 13px; cursor: pointer; }
+.announcement-footer input { width: 17px; height: 17px; padding: 0; margin: 0; accent-color: #85d8ff; }
+.announcement-footer small { display: block; color: #a6bece; font-size: 11px; margin-top: 5px; }
+.announcement-primary { flex-shrink: 0; color: #092237; background: #98deff; border: 0; border-radius: 9px; padding: 12px 22px; font-weight: 700 !important; }
+.announcement-primary span { margin-left: 15px; }
+@media (max-width: 600px) {
+  .startup-announcement { width: calc(100vw - 16px); height: calc(100dvh - 16px); border-radius: 14px; }
+  .announcement-heading { padding: 20px 18px 16px; gap: 8px; }
+  .announcement-heading h1 { font-size: 21px; }
+  .announcement-tabs { padding: 0 12px; gap: 0; justify-content: space-between; }
+  .announcement-tabs button { font-size: 13px; padding: 12px 6px; }
+  .announcement-content { padding: 20px 18px; }
+  .announcement-content h2 { font-size: 18px; }
+  .announcement-payments { gap: 14px; }
+  .announcement-footer { flex-wrap: wrap; padding: 14px 18px; gap: 12px; }
+  .announcement-primary { margin-left: auto; }
+}

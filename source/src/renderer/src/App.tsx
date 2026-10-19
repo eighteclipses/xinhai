@@ -1,5 +1,8 @@
 import LanSyncUpdates from './components/LanSyncUpdates'
-import { COMMERCIAL_EDITION } from '../../shared/edition'
+import StartupAnnouncement from './components/StartupAnnouncement'
+import FocusReminder from './components/FocusReminder'
+import { COMMERCIAL_EDITION, PERSONAL_EDITION } from '../../shared/edition'
+import ThemeStudio from './pages/ThemeStudio'
 import MinimalClock from './components/MinimalClock'
 import Atmosphere from './components/Atmosphere'
 import MarchMemory from './components/MarchMemory'
@@ -38,6 +41,8 @@ import { setVolume } from './lib/audio'
 import { effectiveThemeColor } from '../../shared/theme'
 import { themeTextPalette, TEXT_SURFACE_ALPHA } from '../../shared/themeContrast'
 import { extractWallpaperColors } from './lib/wallpaperColors'
+import './styles/commercial-contrast.css'
+import {useHomeViewport} from './lib/useHomeViewport'
 
 const PAGES = {
   knowledge: Knowledge,
@@ -50,7 +55,7 @@ const PAGES = {
   stats: Stats,
   history: History,
   settings: Settings,
-  customize: Customize
+  customize: COMMERCIAL_EDITION ? ThemeStudio : Customize
 } as const
 
 export default function App() {
@@ -88,6 +93,7 @@ export default function App() {
   const clock = useApp(s => s.focusClock)
   const dataResetVersion = useApp(s => s.dataResetVersion)
   const page = useApp((s) => s.page)
+  const homeViewport=useHomeViewport(page==='home'&&!uiHidden)
   useEffect(() => { if (page === 'focus') setFocusVisited(true) }, [page])
   const reduce = useReducedEffects()
   const volume = useApp((s) => s.settings.volume)
@@ -160,7 +166,7 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: reduce ? 0 : MOTION.page, ease: [0.22, 1, 0.36, 1] }}
         >
-          <Page />
+          {page==='home'?<Home viewport={homeViewport}/>:<Page />}
         </motion.div>}
 
 
@@ -168,11 +174,13 @@ export default function App() {
       </div>
       {clock && (page !== 'focus' || uiHidden) && (!uiHidden || settings.wallpaperClock) && <button className={'floating-clock timer-'+settings.timerPosition} onClick={() => {setUiHidden(false);useApp.getState().go('focus')}}><small>{clock.label}{clock.paused ? ' · 已暂停' : ''}</small><strong>{clock.time}</strong><span>返回专注 →</span></button>}
       <MusicPlayer wallpaper={uiHidden}/>
-      {(page==='home'||uiHidden)&&settings.clockStyle==='minimal'&&<DraggableWidget kind="clock" width={320} height={132} scale={settings.clockScale} unrestricted={uiHidden}>{scale=><MinimalClock scale={scale}/>}</DraggableWidget>}
-      {(page==='home'||uiHidden)&&settings.clockStyle==='p3r'&&<DraggableWidget kind="clock" width={500} height={140} scale={settings.clockScale} unrestricted={uiHidden}>{scale=><P3RClock scale={scale}/>}</DraggableWidget>}
+      {(page==='home'||uiHidden)&&settings.clockStyle==='minimal'&&<DraggableWidget kind="clock" width={320} height={132} scale={settings.clockScale*(page==='home'&&!uiHidden?homeViewport.scale:1)} unrestricted={uiHidden}>{scale=><MinimalClock scale={scale}/>}</DraggableWidget>}
+      {(page==='home'||uiHidden)&&settings.clockStyle==='p3r'&&<DraggableWidget kind="clock" width={500} height={140} scale={settings.clockScale*(page==='home'&&!uiHidden?homeViewport.scale:1)} unrestricted={uiHidden}>{scale=><P3RClock scale={scale}/>}</DraggableWidget>}
       <FocusOutcome />
       <GrowthOverlay />
-      {!COMMERCIAL_EDITION && <MarchMemory />}
+      {PERSONAL_EDITION && <MarchMemory />}
+      {!COMMERCIAL_EDITION && <StartupAnnouncement />}
+      <FocusReminder onOpenFocus={() => { setUiHidden(false); useApp.getState().go('focus') }} />
       {uiHidden&&<><div ref={gestureRef} className="wallpaper-gesture-surface" tabIndex={0} aria-label="壁纸欣赏。双击背景、按 Esc 或 Enter 返回学习界面。" onDoubleClick={()=>setUiHidden(false)} onKeyDown={e=>{if(e.key==='Enter')setUiHidden(false)}} onPointerDown={e=>{touchTap.current.startX=e.clientX;touchTap.current.startY=e.clientY}} onPointerUp={e=>{
         if(e.pointerType!=='touch')return
         const t=touchTap.current,now=Date.now()

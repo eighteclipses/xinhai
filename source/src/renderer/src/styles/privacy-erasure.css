@@ -1,0 +1,18 @@
+.privacy-erasure{padding:22px 26px;grid-column:1/-1;min-width:0}
+.commercial-edition .study-shell[data-page=settings][data-player=card] .page-stage-settings>div{padding-bottom:220px!important}
+.privacy-erasure h2{font-size:18px;color:var(--ink);margin:0 0 12px}
+.privacy-erasure p{font-size:14px;line-height:1.65;color:var(--ink-dim)}
+.privacy-erasure-dialog{position:fixed;inset:0;margin:auto;width:min(720px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box;padding:24px;border:1px solid var(--cyan);border-radius:18px;background:#121f2b;color:#eff6fc;box-shadow:0 18px 70px #0009}
+.privacy-erasure-dialog::backdrop{background:#061019d9}
+.privacy-erasure-dialog h2{font-size:19px;color:#eff6fc;margin:0 0 14px}
+.privacy-erasure-dialog p{color:#d5e1ea;font-size:14px;line-height:1.7}
+.privacy-erasure-path code{display:block;overflow-wrap:anywhere;color:#d5e1ea;white-space:normal}
+.privacy-erasure-ack{display:flex;align-items:flex-start;gap:10px;line-height:1.7;font-size:14px;margin:18px 0}
+.privacy-erasure-ack input{flex:none;margin-top:6px}
+.privacy-erasure-label{display:grid;gap:8px;font-size:14px}
+.privacy-erasure-label input{width:100%;box-sizing:border-box;color:#eff6fc;background:#09121c;border:1px solid #80909c;padding:10px}
+.privacy-erasure-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.privacy-erasure-dialog .btn{color:#eff6fc;border-color:#8198a8;background:#233545;min-height:42px}
+.privacy-erasure-dialog .btn.danger{background:#6c2636;border-color:#eb8b9f}
+.privacy-erasure-dialog .btn:disabled{opacity:.45;cursor:not-allowed}
+.privacy-erasure-dialog :focus-visible{outline:2px solid #97ddfc;outline-offset:3px}

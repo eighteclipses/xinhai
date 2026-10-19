@@ -1,10 +1,11 @@
+import {isCategoryId} from './learningCategories'
 import type { FocusCommitInput } from './types'
 
 export const FOCUS_RECOVERY_VERSION = 1 as const
 export const MAX_RECOVERY_SECONDS = 604800
 
 export type RecoveryMode = 'focus' | 'short' | 'long'
-export type RecoveryRunState = 'running' | 'paused' | 'saving'
+export type RecoveryRunState = 'running' | 'paused' | 'saving' | 'waiting'
 export type RecoveryChoice = 'include-away' | 'discard-away' | 'abandon'
 
 export interface FocusRecoveryRecord {
@@ -20,12 +21,14 @@ export interface FocusRecoveryRecord {
   doneRounds: number
   taskLabel: string
   todoId: number | null
+  categoryId?:string|null
   startedAt: number
   phaseElapsedSeconds: number
   focusSeconds: number
   phaseStartedAt: number | null
   checkpointAt: number
   pendingCommit: FocusCommitInput | null
+  phaseDebtSeconds?:number
 }
 
 export interface FocusRecoveryLoad {
@@ -48,7 +51,7 @@ const text = (value: unknown, max: number): value is string => typeof value === 
 function validCommit(value: unknown): value is FocusCommitInput {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const row = value as Record<string, unknown>
-  return text(row.token, 160) && !!row.token && finite(row.startedAt) && finite(row.endedAt) && row.endedAt >= row.startedAt && integer(row.seconds, 0, MAX_RECOVERY_SECONDS) && text(row.mode, 40) && text(row.taskLabel, 800) && (row.todoId === null || integer(row.todoId, 0, Number.MAX_SAFE_INTEGER))
+  return (row.categoryId===undefined||row.categoryId===null||isCategoryId(row.categoryId)) && text(row.token, 160) && !!row.token && finite(row.startedAt) && finite(row.endedAt) && row.endedAt >= row.startedAt && integer(row.seconds, 0, MAX_RECOVERY_SECONDS) && text(row.mode, 40) && text(row.taskLabel, 800) && (row.todoId === null || integer(row.todoId, 0, Number.MAX_SAFE_INTEGER))
 }
 
 /** Strictly validate the persisted envelope before any renderer recovery UI uses it. */
@@ -57,17 +60,19 @@ export function parseFocusRecovery(value: unknown): FocusRecoveryRecord | null {
   const row = value as Record<string, unknown>
   if (row.version !== FOCUS_RECOVERY_VERSION || !text(row.token, 160) || !row.token) return null
   if (row.mode !== 'focus' && row.mode !== 'short' && row.mode !== 'long') return null
-  if (row.runState !== 'running' && row.runState !== 'paused' && row.runState !== 'saving') return null
+  if (row.runState !== 'running' && row.runState !== 'paused' && row.runState !== 'saving' && row.runState!=='waiting') return null
+  if(row.phaseDebtSeconds!==undefined&&(!finite(row.phaseDebtSeconds)||row.phaseDebtSeconds<0||row.phaseDebtSeconds>MAX_RECOVERY_SECONDS))return null
   if (typeof row.countUp !== 'boolean' || !integer(row.focusMin, 1, 180) || !integer(row.shortMin, 1, 60) || !integer(row.longMin, 1, 60) || !integer(row.cycles, 2, 12) || !integer(row.doneRounds, 0, 100000)) return null
+  if(row.categoryId!==undefined&&row.categoryId!==null&&!isCategoryId(row.categoryId))return null
   if (!text(row.taskLabel, 800) || (row.todoId !== null && !integer(row.todoId, 0, Number.MAX_SAFE_INTEGER))) return null
   if (!finite(row.startedAt) || row.startedAt <= 0 || !integer(row.phaseElapsedSeconds, 0, MAX_RECOVERY_SECONDS) || !integer(row.focusSeconds, 0, MAX_RECOVERY_SECONDS) || !integer(row.checkpointAt, 1, Number.MAX_SAFE_INTEGER)) return null
   if (row.phaseStartedAt !== null && (!finite(row.phaseStartedAt) || row.phaseStartedAt <= 0)) return null
   if (row.runState === 'running' && row.phaseStartedAt === null) return null
   if (row.runState !== 'running' && row.phaseStartedAt !== null) return null
-  if (row.runState === 'saving' ? !validCommit(row.pendingCommit) : row.pendingCommit !== null) return null
+  if (row.runState === 'saving'||(row.runState==='waiting'&&row.mode==='focus') ? !validCommit(row.pendingCommit) : row.pendingCommit !== null) return null
   if (row.pendingCommit) {
     const commit = row.pendingCommit as FocusCommitInput
-    if (commit.token !== row.token || commit.startedAt !== row.startedAt || commit.taskLabel !== row.taskLabel || commit.todoId !== row.todoId) return null
+    if (commit.token !== row.token || commit.startedAt !== row.startedAt || commit.taskLabel !== row.taskLabel || commit.todoId !== row.todoId || (commit.categoryId??null)!==(row.categoryId??null)) return null
   }
   return {
     version: FOCUS_RECOVERY_VERSION,
@@ -82,12 +87,14 @@ export function parseFocusRecovery(value: unknown): FocusRecoveryRecord | null {
     doneRounds: row.doneRounds,
     taskLabel: row.taskLabel,
     todoId: row.todoId,
+    ...(row.categoryId===undefined?{}:{categoryId:row.categoryId as string|null}),
     startedAt: row.startedAt,
     phaseElapsedSeconds: row.phaseElapsedSeconds,
     focusSeconds: row.focusSeconds,
     phaseStartedAt: row.phaseStartedAt,
     checkpointAt: row.checkpointAt,
     pendingCommit: row.pendingCommit as FocusCommitInput | null
+    ,...(row.phaseDebtSeconds===undefined?{}:{phaseDebtSeconds:row.phaseDebtSeconds as number})
   }
 }
 
@@ -124,6 +131,7 @@ export function applyRecoveryChoice(record: FocusRecoveryRecord, choice: Recover
     phaseStartedAt: now,
     checkpointAt: now,
     pendingCommit: null
+    ,phaseDebtSeconds:0
   }
 }
 
@@ -137,7 +145,7 @@ export function checkpointFocusRecovery(record: FocusRecoveryRecord, input: { ru
     focusSeconds: Math.max(0, Math.min(MAX_RECOVERY_SECONDS, Math.floor(input.focusSeconds))),
     phaseStartedAt: input.runState === 'running' ? now : null,
     checkpointAt: Math.max(1, Math.floor(now)),
-    pendingCommit: input.runState === 'saving' ? input.pendingCommit ?? null : null
+    pendingCommit: input.runState === 'saving'||input.runState==='waiting' ? input.pendingCommit ?? null : null
   }
 }
 

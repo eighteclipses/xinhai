@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState,type CSSProperties} from 'react'
 import {useApp} from '../store/app'
-import {effectiveThemeColor,normalizeThemeColor} from '../../../shared/theme'
+import {effectiveThemeColor,normalizeThemeColor,wallpaperColorTarget,wallpaperColorPatch} from '../../../shared/theme'
 import {resolveScene} from '../lib/scenes'
 import {extractWallpaperColors} from '../lib/wallpaperColors'
 import { COMMERCIAL_EDITION } from '../../../shared/edition'
@@ -16,32 +16,51 @@ export default function ThemeSettings(){
   const [busy,setBusy]=useState(false),[saving,setSaving]=useState(false),[message,setMessage]=useState('')
   const request=useRef(0)
   const extraction=useRef<AbortController|null>(null)
+  const paletteTarget=useRef(''),saveActive=useRef(false)
+  const target=wallpaperColorTarget(settings)
   useEffect(()=>setDraft(activeColor),[activeColor])
-  useEffect(()=>{request.current++;extraction.current?.abort();setColors([]);setMessage('');setBusy(false);return()=>{request.current++;extraction.current?.abort()}},[settings.background,settings.customBackground?.src])
+  useEffect(()=>{request.current++;extraction.current?.abort();paletteTarget.current='';setColors([]);setMessage('');setBusy(false);return()=>{request.current++;extraction.current?.abort()}},[target])
   const valid=normalizeThemeColor(draft)
+  function cancelExtraction(){request.current++;extraction.current?.abort();paletteTarget.current='';setColors([]);setBusy(false)}
   async function apply(value:string){
-    const color=normalizeThemeColor(value);if(!color||saving)return
-    setSaving(true)
+    const color=normalizeThemeColor(value);if(!color||saveActive.current)return
+    cancelExtraction();saveActive.current=true;setSaving(true)
     try{await setSettings({themeColor:color,themeMode:'fixed'});setMessage('已固定这个主题色，换壁纸时保持不变。')}
     catch{setMessage('保存主题色失败，请重试。')}
-    finally{setSaving(false)}
+    finally{saveActive.current=false;setSaving(false)}
+  }
+  async function applyWallpaper(value:string|null,expectedTarget:string){
+    if(saveActive.current)return false
+    saveActive.current=true;setSaving(true)
+    try{
+      const current=useApp.getState().settings
+      await setSettings(wallpaperColorPatch(current,expectedTarget,value))
+      setMessage(value?'已保存到当前壁纸，继续随壁纸配色；固定主题色未改变。':'已恢复当前壁纸原配色。')
+      return true
+    }catch(error){setMessage(error instanceof Error?error.message:'保存壁纸配色失败，请重试。');return false}
+    finally{saveActive.current=false;setSaving(false)}
   }
   async function extract(){
+    if(saveActive.current)return
     const id=++request.current;setBusy(true);setMessage('');setColors([])
     extraction.current?.abort();const controller=new AbortController();extraction.current=controller
+    const current=useApp.getState().settings,expectedTarget=wallpaperColorTarget(current)
     try{
-      const scene=resolveScene(settings.background,'customize',false,settings.customBackground)
+      const scene=resolveScene(current.background,'customize',false,current.customBackground)
       const next=await extractWallpaperColors(scene,{displayedVideoOnly:COMMERCIAL_EDITION,signal:controller.signal})
-      if(id===request.current){setColors(next);setMessage('已提取候选色，点选一个应用。')}
+      if(id===request.current&&!controller.signal.aborted&&wallpaperColorTarget(useApp.getState().settings)===expectedTarget){
+        paletteTarget.current=expectedTarget;setColors(next)
+        if(await applyWallpaper(next[0],expectedTarget))setMessage('主色已保存到这张壁纸；也可点选其他候选色。继续随壁纸配色。')
+      }
     }catch(error){if(id===request.current)setMessage(error instanceof Error?error.message:'提取失败，请手动选色。')}
     finally{if(id===request.current)setBusy(false)}
   }
   return <section className="theme-settings glass" aria-label="界面主题色">
     <header><div><h2>界面主题色</h2><p>随壁纸自动搭配，也可以固定喜欢的颜色。白色正文和数字保持白色。</p></div><span className="theme-current"><i style={{background:activeColor}}/>{activeColor.toUpperCase()}</span></header>
-    <div className="theme-mode" role="group" aria-label="主题配色模式"><button aria-pressed={settings.themeMode==='wallpaper'} onClick={()=>void setSettings({themeMode:'wallpaper'}).catch(()=>setMessage('模式保存失败，请重试。'))}>随壁纸配色</button><button aria-pressed={settings.themeMode==='fixed'} onClick={()=>void setSettings({themeMode:'fixed',themeColor:activeColor}).catch(()=>setMessage('模式保存失败，请重试。'))}>固定主题色</button><small>{settings.themeMode==='wallpaper'?'换壁纸时自动配色；自定义壁纸会提取主色。':'换壁纸不换色。手动选色会进入此模式。'}</small></div>
+    <div className="theme-mode" role="group" aria-label="主题配色模式"><button disabled={saving} aria-pressed={settings.themeMode==='wallpaper'} onClick={()=>{cancelExtraction();void setSettings({themeMode:'wallpaper'}).catch(()=>setMessage('模式保存失败，请重试。'))}}>随壁纸配色</button><button disabled={saving} aria-pressed={settings.themeMode==='fixed'} onClick={()=>{cancelExtraction();void setSettings({themeMode:'fixed'}).catch(()=>setMessage('模式保存失败，请重试。'))}}>固定主题色</button><small>{settings.themeMode==='wallpaper'?'每张壁纸分别记住配色，切换时自动跟随。':'换壁纸不换色。手动选色会进入此模式。'}</small></div>
     <div className="theme-presets" role="group" aria-label="主题色预设">{PRESETS.map(([label,color])=><button key={color} aria-pressed={activeColor===color} disabled={saving} onClick={()=>void apply(color)}><i style={{background:color}}/><span>{label}</span>{activeColor===color&&<b>✓</b>}</button>)}</div>
-    <div className="theme-custom-row"><label className="theme-picker"><span>自选颜色</span><input type="color" aria-label="选择主题颜色" value={valid??activeColor} onChange={e=>setDraft(e.target.value)}/></label><label className="theme-hex"><span>颜色代码</span><input aria-label="主题色代码" value={draft} maxLength={7} spellCheck={false} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&valid)void apply(valid)}} aria-invalid={!valid}/></label><button className="btn" disabled={!valid||saving} onClick={()=>void apply(draft)}>应用颜色</button><button className="btn" disabled={busy} onClick={()=>void extract()}>{busy?'正在提取…':'从当前壁纸提取颜色'}</button><div className="theme-digit-preview" style={{'--preview-color':valid??activeColor} as CSSProperties}><strong>25:00</strong><small>白色数字 · 主题光晕</small></div></div>
-    {colors.length>0&&<div className="theme-candidates" role="group" aria-label="壁纸候选色">{colors.map(color=><button key={color} disabled={saving} aria-label={'应用候选色 '+color} onClick={()=>void apply(color)}><i style={{background:color}}/>{color.toUpperCase()}</button>)}</div>}
+    <div className="theme-custom-row"><label className="theme-picker"><span>自选颜色</span><input type="color" aria-label="选择主题颜色" value={valid??activeColor} onChange={e=>setDraft(e.target.value)}/></label><label className="theme-hex"><span>颜色代码</span><input aria-label="主题色代码" value={draft} maxLength={7} spellCheck={false} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&valid)void apply(valid)}} aria-invalid={!valid}/></label><button className="btn" disabled={!valid||saving} onClick={()=>void apply(draft)}>应用固定颜色</button><button className="btn" disabled={busy||saving} onClick={()=>void extract()}>{busy?'正在提取…':'从当前壁纸提取颜色'}</button><button className="btn" disabled={busy||saving} onClick={()=>{cancelExtraction();void applyWallpaper(null,target)}}>恢复当前壁纸原配色</button><div className="theme-digit-preview" style={{'--preview-color':valid??activeColor} as CSSProperties}><strong>25:00</strong><small>白色数字 · 主题光晕</small></div></div>
+    {colors.length>0&&<div className="theme-candidates" role="group" aria-label="壁纸候选色">{colors.map(color=><button key={color} disabled={saving} aria-label={'应用候选色 '+color} onClick={()=>void applyWallpaper(color,paletteTarget.current)}><i style={{background:color}}/>{color.toUpperCase()}</button>)}</div>}
     {message&&<p className="theme-message" role="status">{message}</p>}
   </section>
 }

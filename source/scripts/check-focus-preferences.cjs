@@ -1,0 +1,16 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{buildSync}=require('esbuild')
+const run=fs.mkdtempSync(path.join(require('node:os').tmpdir(),'xinhai-focus-preferences-')),file=path.join(run,'preferences.cjs')
+buildSync({entryPoints:['src/shared/focusPreferences.ts'],bundle:true,platform:'node',format:'cjs',outfile:file})
+const p=require(file),checks=[]
+assert.equal(p.parseFocusPanelLayout(null),null)
+for(const value of [{x:0,y:1,scale:.65},{x:1,y:0,scale:1.6},{x:.371,y:.598,scale:1.123}])assert.deepEqual(p.parseFocusPanelLayout(value),value)
+checks.push('Null default and all normalized coordinate/scale boundaries preserve exact preferences')
+for(const value of [undefined,[],{},true,{x:0,y:0,scale:0},{x:-.1,y:.5,scale:1},{x:1.1,y:0,scale:1},{x:0,y:Infinity,scale:1},{x:0,y:0,scale:NaN},{x:0,y:0,scale:1.61},{x:0,y:0,scale:1,extra:true},Object.assign(Object.create({x:0,y:0,scale:1}),{a:1,b:2,c:3})])assert.throws(()=>p.parseFocusPanelLayout(value))
+checks.push('Out-of-bounds, nonfinite, extra and inherited fields cannot become durable layout state')
+for(const value of ['wait','continue'])assert.equal(p.validateFocusPreferences({focusBackgroundBehavior:value}).focusBackgroundBehavior,value)
+for(const value of ['round','batch'])assert.equal(p.validateFocusPreferences({focusRewardPresentation:value}).focusRewardPresentation,value)
+for(const value of [null,[],{focusBackgroundBehavior:'always'},{focusRewardPresentation:'silent'}])assert.throws(()=>p.validateFocusPreferences(value))
+const frozen=Object.freeze({focusPanelLayout:Object.freeze({x:.2,y:.3,scale:1}),themeColor:'#123456'});assert.deepEqual(p.validateFocusPreferences(frozen),frozen)
+checks.push('Only supported timer/presentation policies are accepted and unrelated preferences are not changed')
+const report={ok:true,scope:'Pure focus preference shape/range validation; runtime gestures and backup migration are separate checks',checks}
+fs.writeFileSync(path.join(run,'result.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({ok:true,report:path.join(run,'result.json'),checks:checks.length}))

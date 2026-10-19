@@ -1,0 +1,495 @@
+[
+  {
+    "id": "avg-4217-makoto-1-art-01",
+    "characterId": "avg_4217_makoto_1",
+    "characterName": "结城理",
+    "variantName": "常服·摘下耳机",
+    "src": "characters/moon-on-water/1420b803bd2121385b4d7787d67f1a6a399558177.png",
+    "width": 1664,
+    "height": 1664,
+    "bbox": [
+      833,
+      0,
+      1335,
+      1647
+    ],
+    "sourceIndex": 1,
+    "sha256": "9e498b80f6ca5c8003d8260164729c0294ee6581a36df23a328225be196aa5b7"
+  },
+  {
+    "id": "avg-4217-makoto-1-art-02",
+    "characterId": "avg_4217_makoto_1",
+    "characterName": "结城理",
+    "variantName": "常服·佩戴耳机",
+    "src": "characters/moon-on-water/576e720b188074fa26c160a8717e0eea399558177.png",
+    "width": 1664,
+    "height": 1664,
+    "bbox": [
+      833,
+      0,
+      1335,
+      1647
+    ],
+    "sourceIndex": 2,
+    "sha256": "0db8d3fdeff81249c1386ec2be3cd9e19800c83d07b4763f4c086b02489bc424"
+  },
+  {
+    "id": "avg-4217-makoto-1-art-03",
+    "characterId": "avg_4217_makoto_1",
+    "characterName": "结城理",
+    "variantName": "战斗服·持剑",
+    "src": "characters/moon-on-water/13db4468f63392208fd137e445815577399558177.png",
+    "width": 1664,
+    "height": 1664,
+    "bbox": [
+      309,
+      0,
+      1355,
+      1660
+    ],
+    "sourceIndex": 3,
+    "sha256": "6673ee426a4149259c5b661fe89a0bfb86576bbc49e0fee0fdd6e2d92da471cf"
+  },
+  {
+    "id": "avg-4217-makoto-1-art-04",
+    "characterId": "avg_4217_makoto_1",
+    "characterName": "结城理",
+    "variantName": "战斗服·无持剑",
+    "src": "characters/moon-on-water/2b248541032f4517e0390bdbd9f3120e399558177.png",
+    "width": 1664,
+    "height": 1664,
+    "bbox": [
+      610,
+      0,
+      1355,
+      1660
+    ],
+    "sourceIndex": 4,
+    "sha256": "4369558b6f57a8efd5bb284b0561601dec32e40fc4fd4692616487becfae4e39"
+  },
+  {
+    "id": "avg-4217-makoto-1-art-05",
+    "characterId": "avg_4217_makoto_1",
+    "characterName": "结城理",
+    "variantName": "外套与肩包",
+    "src": "characters/moon-on-water/b0f134f2621b8b95402f3c5333361fbf399558177.png",
+    "width": 1664,
+    "height": 1664,
+    "bbox": [
+      848,
+      1,
+      1354,
+      1638
+    ],
+    "sourceIndex": 5,
+    "sha256": "885010feebc8a6e8ddee30e5101d86c2989dd6eb7a9e100d716adc3cec9092da"
+  },
+  {
+    "id": "avg-4217-makoto-1-art-06",
+    "characterId": "avg_4217_makoto_1",
+    "characterName": "结城理",
+    "variantName": "侍者服·甜点托盘",
+    "src": "characters/moon-on-water/9a1ab7695442565b4626a68bb115e35c399558177.png",
+    "width": 1664,
+    "height": 1664,
+    "bbox": [
+      516,
+      0,
+      1293,
+      1664
+    ],
+    "sourceIndex": 6,
+    "sha256": "6ad33b2fcc81b6c006d7bc509aadeaebb776e733c05d36c7ab0f86096a2ab6d8"
+  },
+  {
+    "id": "avg-4217-makoto-1-art-07",
+    "characterId": "avg_4217_makoto_1",
+    "characterName": "结城理",
+    "variantName": "侍者服·饮品托盘",
+    "src": "characters/moon-on-water/a7dcc9eab2a2fbbde443f422cb9cd8ed399558177.png",
+    "width": 1664,
+    "height": 1664,
+    "bbox": [
+      516,
+      3,
+      1293,
+      1664
+    ],
+    "sourceIndex": 7,
+    "sha256": "9794524b4f562f3b6d060a7e4afeac8427277745f38b4d1ec86ffafaf14ac29a"
+  },
+  {
+    "id": "avg-4218-aigis-1-art-01",
+    "characterId": "avg_4218_aigis_1",
+    "characterName": "埃癸斯",
+    "variantName": "校服与手提箱",
+    "src": "characters/moon-on-water/bc26efff26cb0f9455fb829d9d523581399558177.png",
+    "width": 1356,
+    "height": 1356,
+    "bbox": [
+      405,
+      0,
+      971,
+      1355
+    ],
+    "sourceIndex": 9,
+    "sha256": "49fc27ece8df4e1313e1382a4ae52feaffc41f636368a7479a0bcd3b6696eb30"
+  },
+  {
+    "id": "avg-4218-aigis-1-art-02",
+    "characterId": "avg_4218_aigis_1",
+    "characterName": "埃癸斯",
+    "variantName": "机械装束",
+    "src": "characters/moon-on-water/fafb4d5a57020bda8498e519e2c14c54399558177.png",
+    "width": 1356,
+    "height": 1356,
+    "bbox": [
+      385,
+      0,
+      932,
+      1351
+    ],
+    "sourceIndex": 10,
+    "sha256": "db5cbc4fed594402aafc28314b4a2b3f647a428a6cb35c066f6a00bd728341b7"
+  },
+  {
+    "id": "avg-4218-aigis-1-art-03",
+    "characterId": "avg_4218_aigis_1",
+    "characterName": "埃癸斯",
+    "variantName": "外套与手提箱",
+    "src": "characters/moon-on-water/de4641811bd6d0a660e9246683428a21399558177.png",
+    "width": 1356,
+    "height": 1356,
+    "bbox": [
+      405,
+      0,
+      971,
+      1355
+    ],
+    "sourceIndex": 11,
+    "sha256": "7bb81e86b40f9445fc189da345f15ec06467be1781419c814a9c89e54fa797b7"
+  },
+  {
+    "id": "avg-4219-yukari-1-art-01",
+    "characterId": "avg_4219_yukari_1",
+    "characterName": "岳羽由加莉",
+    "variantName": "常服",
+    "src": "characters/moon-on-water/a7cd5875357d81e64153df347554ca83399558177.png",
+    "width": 1252,
+    "height": 1252,
+    "bbox": [
+      423,
+      0,
+      920,
+      1218
+    ],
+    "sourceIndex": 13,
+    "sha256": "3d8575ea802cec2e99e9f43e6370e0f01615ed6e1a2c7f435a46593e6565df09"
+  },
+  {
+    "id": "avg-4219-yukari-1-art-02",
+    "characterId": "avg_4219_yukari_1",
+    "characterName": "岳羽由加莉",
+    "variantName": "战斗服·持弓",
+    "src": "characters/moon-on-water/9696abf8218b28335be281f88b05936e399558177.png",
+    "width": 1252,
+    "height": 1252,
+    "bbox": [
+      220,
+      0,
+      1031,
+      1219
+    ],
+    "sourceIndex": 14,
+    "sha256": "3283de287cdbce45809f930f705cbb31512334ea256ade2be7518f2774d6f266"
+  },
+  {
+    "id": "avg-4219-yukari-1-art-03",
+    "characterId": "avg_4219_yukari_1",
+    "characterName": "岳羽由加莉",
+    "variantName": "战斗服·无持弓",
+    "src": "characters/moon-on-water/e802d5e467474b462e09a25eab5af1ec399558177.png",
+    "width": 1252,
+    "height": 1252,
+    "bbox": [
+      423,
+      0,
+      937,
+      1219
+    ],
+    "sourceIndex": 15,
+    "sha256": "0dcd889b545171094c6671bff495fa01b0dcd8491d10d0faae8457d36fb2675f"
+  },
+  {
+    "id": "avg-4219-yukari-1-art-04",
+    "characterId": "avg_4219_yukari_1",
+    "characterName": "岳羽由加莉",
+    "variantName": "外套与手提包",
+    "src": "characters/moon-on-water/533973a4a6fb023c8df5907ff67e2148399558177.png",
+    "width": 1252,
+    "height": 1252,
+    "bbox": [
+      468,
+      0,
+      944,
+      1252
+    ],
+    "sourceIndex": 16,
+    "sha256": "0350476a2423efdbb88e8148ef4495a99e509680dbc1e8e8eb8c868a047922c3"
+  },
+  {
+    "id": "avg-4220-kormr-1-art-01",
+    "characterId": "avg_4220_kormr_1",
+    "characterName": "虎狼丸",
+    "variantName": "常态",
+    "src": "characters/moon-on-water/f0a3b8c7c8911216f2d2c3042710825f399558177.png",
+    "width": 1204,
+    "height": 1204,
+    "bbox": [
+      285,
+      38,
+      1047,
+      1199
+    ],
+    "sourceIndex": 18,
+    "sha256": "91db69dbc332e5d243412a40a04db61c39a9a9bea5e39bd1a68c7568b68ef641"
+  },
+  {
+    "id": "avg-4220-kormr-1-art-02",
+    "characterId": "avg_4220_kormr_1",
+    "characterName": "虎狼丸",
+    "variantName": "持短刀",
+    "src": "characters/moon-on-water/870dff05130137ae918d9c49c08b2654399558177.png",
+    "width": 1204,
+    "height": 1204,
+    "bbox": [
+      155,
+      38,
+      1047,
+      1199
+    ],
+    "sourceIndex": 19,
+    "sha256": "b5a93325f3413e4eabbe37aeaa9ebba079ade24f0a07d07b05e548dce1551d1e"
+  },
+  {
+    "id": "avg-4220-kormr-1-art-03",
+    "characterId": "avg_4220_kormr_1",
+    "characterName": "虎狼丸",
+    "variantName": "天使装扮",
+    "src": "characters/moon-on-water/b2f88cfd39d800b062c9bbf1f1988822399558177.png",
+    "width": 1204,
+    "height": 1204,
+    "bbox": [
+      252,
+      0,
+      1048,
+      1198
+    ],
+    "sourceIndex": 20,
+    "sha256": "05a814cc35aa1b146ec918cf552a315b4075c1a580e66dccaaa05f335285daf7"
+  },
+  {
+    "id": "avg-npc-2377-1-art-01",
+    "characterId": "avg_npc_2377_1",
+    "characterName": "学生 班长 （阿米娅）",
+    "variantName": "外套",
+    "src": "characters/moon-on-water/40dadd3c951975930c93d4d9079707e7399558177.png",
+    "width": 1584,
+    "height": 1584,
+    "bbox": [
+      397,
+      1,
+      1186,
+      1584
+    ],
+    "sourceIndex": 22,
+    "sha256": "aeae5b7861857d2bb372b805ff368b68ed75649803eefd6abb3360fdb806a857"
+  },
+  {
+    "id": "avg-npc-2378-1-art-01",
+    "characterId": "avg_npc_2378_1",
+    "characterName": "吉阿达",
+    "variantName": "黑色长外套",
+    "src": "characters/moon-on-water/17e12e81b2048679e98533f3d2d55848399558177.png",
+    "width": 1612,
+    "height": 1612,
+    "bbox": [
+      543,
+      0,
+      1065,
+      1611
+    ],
+    "sourceIndex": 24,
+    "sha256": "16a346754a00324267dac1e9e1a19f513864156660cc5df69c2bbe95817ea0cb"
+  },
+  {
+    "id": "avg-npc-2379-1-art-01",
+    "characterId": "avg_npc_2379_1",
+    "characterName": "裘里奥",
+    "variantName": "橙色外套",
+    "src": "characters/moon-on-water/53d6ebc2a49233a65f25b25b7be4de10399558177.png",
+    "width": 1688,
+    "height": 1688,
+    "bbox": [
+      454,
+      0,
+      1234,
+      1688
+    ],
+    "sourceIndex": 26,
+    "sha256": "96f038b513edf9026e8e2e9d830e4901d94af5799fd2e6d3f46915ea43028650"
+  },
+  {
+    "id": "avg-npc-2381-1-art-01",
+    "characterId": "avg_npc_2381_1",
+    "characterName": "菲利切",
+    "variantName": "长袍与书",
+    "src": "characters/moon-on-water/1cf9ff9e036c518c4637ff262ba83e7e399558177.png",
+    "width": 1764,
+    "height": 1764,
+    "bbox": [
+      468,
+      0,
+      1302,
+      1764
+    ],
+    "sourceIndex": 28,
+    "sha256": "66817d27bba110e00d1a60bae571082b3e1e5bcf958b8cc58903cba2db052feb"
+  },
+  {
+    "id": "avg-npc-2382-1-art-01",
+    "characterId": "avg_npc_2382_1",
+    "characterName": "卡拉",
+    "variantName": "工装",
+    "src": "characters/moon-on-water/957dda7914afb265087b5e29b5b0fb38399558177.png",
+    "width": 1688,
+    "height": 1688,
+    "bbox": [
+      487,
+      0,
+      1201,
+      1688
+    ],
+    "sourceIndex": 29,
+    "sha256": "4d4f62888d54d7189bfdcf737d710cb9c1877f0a2e4e724f3d07d4690f5225b5"
+  },
+  {
+    "id": "avg-npc-2387-1-art-01",
+    "characterId": "avg_npc_2387_1",
+    "characterName": "山岸风花",
+    "variantName": "校服",
+    "src": "characters/moon-on-water/310d6a89639f72af0647f59039e3bbed399558177.png",
+    "width": 1356,
+    "height": 1356,
+    "bbox": [
+      488,
+      0,
+      849,
+      1356
+    ],
+    "sourceIndex": 30,
+    "sha256": "71c8fd6bfabc6471347e02e68efc72d19bc719fe16e2843b1ff669b352da2f4d"
+  },
+  {
+    "id": "avg-npc-2387-1-art-02",
+    "characterId": "avg_npc_2387_1",
+    "characterName": "山岸风花",
+    "variantName": "耳机与披肩",
+    "src": "characters/moon-on-water/05da2a9484222c8d54583dcc6609f6ed399558177.png",
+    "width": 1356,
+    "height": 1356,
+    "bbox": [
+      474,
+      0,
+      896,
+      1356
+    ],
+    "sourceIndex": 31,
+    "sha256": "a403c2f581fc03634ab865d123fbdf208c974e82903a4d7e7ac70e84f7a2aa7f"
+  },
+  {
+    "id": "avg-npc-2387-1-art-03",
+    "characterId": "avg_npc_2387_1",
+    "characterName": "山岸风花",
+    "variantName": "长外套",
+    "src": "characters/moon-on-water/44b887a97efb5f0a42ab840d701b19d7399558177.png",
+    "width": 1356,
+    "height": 1356,
+    "bbox": [
+      486,
+      0,
+      840,
+      1356
+    ],
+    "sourceIndex": 32,
+    "sha256": "2eb019bac291b605140d76ebe4dca7f8bbf33097ee4e5ff6628b34a304525c70"
+  },
+  {
+    "id": "avg-npc-2388-1-art-01",
+    "characterId": "avg_npc_2388_1",
+    "characterName": "天田乾",
+    "variantName": "橙色连帽常服",
+    "src": "characters/moon-on-water/20e36d943897679f551cff5bf8d6e4c3399558177.png",
+    "width": 1328,
+    "height": 1328,
+    "bbox": [
+      618,
+      0,
+      1040,
+      1328
+    ],
+    "sourceIndex": 34,
+    "sha256": "0ff45b0cdd34571e30c931b2fad91cd22caeafd7a6703493816c84ba86e3b5a6"
+  },
+  {
+    "id": "avg-npc-2388-1-art-02",
+    "characterId": "avg_npc_2388_1",
+    "characterName": "天田乾",
+    "variantName": "战斗服·持长枪",
+    "src": "characters/moon-on-water/04705a6ba718ff656114c252188831f4399558177.png",
+    "width": 1328,
+    "height": 1328,
+    "bbox": [
+      3,
+      0,
+      1324,
+      1328
+    ],
+    "sourceIndex": 35,
+    "sha256": "2686d36e1d55954d54119deffc82b9036e6ea9a707266533a418f92a879fe785"
+  },
+  {
+    "id": "avg-npc-2388-1-art-03",
+    "characterId": "avg_npc_2388_1",
+    "characterName": "天田乾",
+    "variantName": "战斗服·无持长枪",
+    "src": "characters/moon-on-water/580c625d3743929627b4fda4fe539fa7399558177.png",
+    "width": 1328,
+    "height": 1328,
+    "bbox": [
+      581,
+      0,
+      1050,
+      1328
+    ],
+    "sourceIndex": 36,
+    "sha256": "16c41de49338522dd1e3671179e29878c1100a6bf43a7129638f4f85eaccd0a4"
+  },
+  {
+    "id": "avg-npc-2388-1-art-04",
+    "characterId": "avg_npc_2388_1",
+    "characterName": "天田乾",
+    "variantName": "长外套",
+    "src": "characters/moon-on-water/bb4964318da6b57dddd9d0dc113fa18f399558177.png",
+    "width": 1328,
+    "height": 1328,
+    "bbox": [
+      618,
+      0,
+      1048,
+      1328
+    ],
+    "sourceIndex": 37,
+    "sha256": "605e2878309ede15b53a508d409687c867421b58276d3c419d2f5ed3b7fb1c8a"
+  }
+]

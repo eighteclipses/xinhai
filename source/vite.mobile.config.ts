@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'node:path'
 
 export default defineConfig({
-  plugins: [react(), {
+  plugins: [react(), {name:'source-notices',resolveId(id:string){if(id==='virtual:xinhai-notices')return '\0source-notices'},load(id:string){if(id==='\0source-notices')return 'export default '+JSON.stringify('{}')}}, {
     name: 'mobile-music-backend',
     enforce: 'pre',
     resolveId(source, importer) {

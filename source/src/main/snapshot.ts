@@ -5,9 +5,9 @@ import type { ModelClient } from '../shared/modelConfig'
 import { scoreJournal } from './scoring'
 import { DIMENSIONS, type DimensionId } from '../shared/types'
 
-// 即时拍壳：手机/局域网 POST /snapshot {caption} → 评分入账 → 桌面触发现场演出
+// 可选本机自动化调试：POST /snapshot {caption} → 评分入账 → 桌面触发现场演出
 export function startSnapshotServer(getWindow: () => BrowserWindow | null,model:ModelClient): void {
-  // The source build starts no listener by default. Explicit local automation
+  // No edition starts this experimental listener by default. Local automation
   // also requires a caller-owned token, because a request may use a paid model.
   if (process.env.XINHAI_ENABLE_SNAPSHOT !== '1') return
   const token = process.env.XINHAI_SNAPSHOT_TOKEN || ''

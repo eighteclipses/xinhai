@@ -1,3 +1,10 @@
+import {parseWallpaperThemeColors} from './theme'
+import {parseCharacterPosition,parseCharacterScale} from './characterPlacement'
+import {validateKnowledgeCategoryTarget} from './knowledgeCategories'
+import {CATEGORY_TABLES,isCategoryId,validateCategoryInput} from './learningCategories'
+import {parseHomeLayouts} from './homeLayout'
+import {validateFocusPreferences} from './focusPreferences'
+import {LEGACY_APPEARANCE_OMISSIONS} from './personalAppearance'
 import { DEFAULT_SETTINGS, DIMENSIONS } from './types'
 import { parseFocusRecovery } from './focusRecovery'
 import { ORIGINAL_IDS, parseThemeAppearance, themeName } from './themeLibrary'
@@ -6,21 +13,26 @@ import { ORIGINAL_IDS, parseThemeAppearance, themeName } from './themeLibrary'
 // SQL identifiers always come from this local schema, never from imported JSON.
 const I = 'integer', S = 'string', J = 'json', N = 'nullableInteger', T = 'nullableString'
 export const BACKUP_SCHEMA = {
+  learning_categories: {id:S,name:S,color:S,sort_order:I,archived_at:N,created_at:I,updated_at:I},
+  local_knowledge_categories: {root:S,path:S,category_id:S},
   stats: { id:I, points_json:J },
   growth_events: { id:I, ts:I, dimension:S, points:I, source:S, reason:S, sync_cause:T },
-  focus_sessions: { id:I, started_at:I, ended_at:I, minutes:I, mode:S, task_label:S, seconds:N, sync_token:T },
-  journals: { id:I, ts:I, content:S, scores_json:J, summary:S, engine:S },
+  focus_sessions: { id:I, started_at:I, ended_at:I, minutes:I, mode:S, task_label:S, seconds:N, sync_token:T, category_id:T },
+  journals: { id:I, ts:I, content:S, scores_json:J, summary:S, engine:S, category_id:T },
   settings: { id:I, json:J },
-  todos: { id:I, title:S, priority:I, date:S, est_pomos:I, done:I, focus_minutes:I, created_at:I, completed_at:N },
-  habits: { id:I, name:S, dimension:S, weekly_target:I, sort_order:I, deleted_at:N },
-  habit_logs: { id:I, habit_id:I, date:S, ts:I },
-  events: { id:I, title:S, date:S, kind:S },
+  todos: { id:I, title:S, priority:I, date:S, est_pomos:I, done:I, focus_minutes:I, created_at:I, completed_at:N, category_id:T },
+  habits: { id:I, name:S, dimension:S, weekly_target:I, sort_order:I, deleted_at:N, category_id:T },
+  habit_logs: { id:I, habit_id:I, date:S, ts:I, category_id:T },
+  events: { id:I, title:S, date:S, kind:S, category_id:T },
   focus_commits: { token:S, result_json:J },
+  focus_reward_sessions: {token:S,seconds:I,ended_at:I},
+  focus_reward_blocks: {id:S,ts:I},
+  focus_reward_presentations:{token:S,block_ids:J,session_tokens:J,ts:I,acknowledged:I},
   journal_commits: { token:S, result_json:J },
   growth_meta: { id:I, epoch:I },
   growth_resets: { id:I, ts:I, stats_json:J, events_json:J, undone:I, practice_json:T },
-  review_cards: { id:S, question:S, answer:S, topic:S, sourceRoot:S, sourcePath:S, dueDate:S, intervalDays:I, reviews:I, archived:I, version:I, createdAt:I, updatedAt:I },
-  review_logs: { token:S, cardId:S, rating:S, ts:I, previousDue:S, nextDue:S, intervalDays:I },
+  review_cards: { id:S, question:S, answer:S, topic:S, sourceRoot:S, sourcePath:S, dueDate:S, intervalDays:I, reviews:I, archived:I, version:I, createdAt:I, updatedAt:I, category_id:T },
+  review_logs: { token:S, cardId:S, rating:S, ts:I, previousDue:S, nextDue:S, intervalDays:I, category_id:T },
   music_imports: { id:S, path:S, title:S, createdAt:I },
   focus_recovery: { id:I, token:S, body:J, updated_at:I }
 } as const
@@ -29,7 +41,7 @@ export const BACKUP_TABLES = Object.keys(BACKUP_SCHEMA) as BackupTable[]
 export const BACKUP_SEQUENCES = ['growth_events','focus_sessions','journals','todos','habits','habit_logs','events','growth_resets'] as const
 export type BackupRow = Record<string, string | number | null>
 export interface DatabaseSnapshot {
-  format:'xinhai-database-snapshot'; version:1; createdAt:number
+  format:'xinhai-database-snapshot'; version:3; createdAt:number
   tables:Record<BackupTable, BackupRow[]>
   sequences:Record<string, number>
   clientState:Record<string, string>
@@ -47,6 +59,7 @@ export function validateBackupClientState(value:unknown):Record<string,string> {
     size+=key.length+v.length
     if(key==='wallpaper-gesture-learned'){if(v!=='1')fail('手势提示状态无效');continue}
     const parsed=json(v)
+    if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed)){const categoryId=(parsed as Record<string,unknown>).categoryId;if(categoryId!==undefined&&categoryId!==null&&!isCategoryId(categoryId))fail('草稿分类无效')}
     if(key==='xinhai-focus-tasks-v1'){
       if(!Array.isArray(parsed)||parsed.some(t=>!t||!text(t.id)||!text(t.title)||!finite(t.usedAt)))fail('专注任务草稿损坏')
       continue
@@ -93,21 +106,28 @@ function rows(table:BackupTable,value:unknown,embedded=false):BackupRow[] {
   if(!Array.isArray(value) || value.length>1_000_000) return fail('记录数量无效')
   const schema=BACKUP_SCHEMA[table],keys=Object.keys(schema),primary=keys[0],seen=new Set<unknown>()
   for(const item of value){
-    const row=object(item);exact(row,keys)
+    const row=object(item)
+    const legacyCategory=embedded&&CATEGORY_TABLES.includes(table as never)&&!Object.hasOwn(row,'category_id')
+    exact(row,legacyCategory?keys.filter(key=>key!=='category_id'):keys)
     for(const [key,kind] of Object.entries(schema)){
-      const v=row[key]
+      const v=legacyCategory&&key==='category_id'?null:row[key]
       if((kind===N || kind===T) && v===null)continue
       if(kind===I || kind===N){if(!integer(v))fail(table+'.'+key+' 不是非负整数')}
       else {if(typeof v!=='string'||v.length>SNAPSHOT_LIMIT||v.includes('\u0000'))fail(table+'.'+key+' 文本无效');if(kind===J)json(v)}
     }
-    const id=row[primary]
+    const id=table==='local_knowledge_categories'?JSON.stringify([row.root,row.path]):row[primary]
     if((typeof id==='number'&&id<1)||(typeof id==='string'&&!id)||seen.has(id))fail(table+' 主键为空或重复')
     seen.add(id)
+    if(Object.hasOwn(row,'category_id')&&row.category_id!==null&&!isCategoryId(row.category_id))fail('分类引用标识无效')
+    if(table==='learning_categories'){validateCategoryInput({id:row.id as string,name:row.name as string,color:row.color as string});if(Number(row.sort_order)>1000000)fail('分类排序越界')}
+    if(table==='local_knowledge_categories')validateKnowledgeCategoryTarget(row.root,row.path)
     if(table==='stats')points(json(row.points_json))
     if(table==='journals')points(json(row.scores_json))
     if(table==='growth_events'||table==='habits'){if(!DIMENSIONS.includes(row.dimension as never))fail('成长维度无效')}
     for(const key of ['done','archived','undone'])if(Object.hasOwn(row,key)&&![0,1].includes(row[key] as number))fail('布尔数值无效')
     if(table==='focus_sessions' && (Number(row.ended_at)<Number(row.started_at) || (row.seconds!==null&&Number(row.seconds)>604800)))fail('专注时长无效')
+    if(table==='focus_reward_sessions'&&(String(row.token).length>160||Number(row.seconds)>604800))fail('专注音符贡献无效')
+    if(table==='focus_reward_blocks'&&!/^[1-9]\d{0,6}$/.test(String(row.id)))fail('专注音符区块无效')
     if(table==='focus_recovery'){
       const recovery=parseFocusRecovery(json(row.body))
       if(!recovery || recovery.token!==row.token)fail('进行中专注状态损坏')
@@ -140,15 +160,67 @@ function rows(table:BackupTable,value:unknown,embedded=false):BackupRow[] {
 }
 
 export function validateDatabaseSnapshot(value:unknown):DatabaseSnapshot {
-  const data=object(value);exact(data,['format','version','createdAt','tables','sequences','clientState'])
-  if(data.format!=='xinhai-database-snapshot'||data.version!==1||!integer(data.createdAt))fail('格式或版本不支持')
+  let data=object(value);exact(data,['format','version','createdAt','tables','sequences','clientState'])
+  if(data.format!=='xinhai-database-snapshot'||![1,2,3].includes(data.version as number)||!integer(data.createdAt))fail('格式或版本不支持')
+  if(data.version===1){
+    // Validate the complete legacy shape before adding only known nullable columns.
+    const legacyTables=object(data.tables);exact(legacyTables,BACKUP_TABLES.filter(t=>!['learning_categories','local_knowledge_categories','focus_reward_sessions','focus_reward_blocks','focus_reward_presentations'].includes(t)))
+    for(const table of CATEGORY_TABLES){if(!Array.isArray(legacyTables[table]))fail('旧版记录集合无效');for(const value of legacyTables[table] as unknown[])exact(object(value),Object.keys(BACKUP_SCHEMA[table]).filter(k=>k!=='category_id'))}
+    data=JSON.parse(JSON.stringify(data));data.version=2
+    const migrated=object(data.tables);migrated.learning_categories=[];migrated.local_knowledge_categories=[]
+    for(const table of CATEGORY_TABLES)migrated[table]=(migrated[table] as Record<string,unknown>[]).map(row=>({...row,category_id:null}))
+    const legacySettings=object(json((migrated.settings as BackupRow[])[0]?.json))
+    for(const [key,value]of Object.entries(LEGACY_APPEARANCE_OMISSIONS))if(!Object.hasOwn(legacySettings,key))legacySettings[key]=JSON.parse(JSON.stringify(value))
+    for(const key of ['focusPanelLayout','focusBackgroundBehavior','focusRewardPresentation'] as const)if(!Object.hasOwn(legacySettings,key))legacySettings[key]=DEFAULT_SETTINGS[key]
+    ;(migrated.settings as BackupRow[])[0].json=JSON.stringify(legacySettings)
+  }
+  if(data.version===2){
+    exact(object(data.tables),BACKUP_TABLES.filter(t=>!['focus_reward_sessions','focus_reward_blocks','focus_reward_presentations'].includes(t)))
+    data=JSON.parse(JSON.stringify(data));data.version=3
+    Object.assign(object(data.tables),{focus_reward_sessions:[],focus_reward_blocks:[],focus_reward_presentations:[]})
+  }
   const tables=object(data.tables);exact(tables,BACKUP_TABLES)
   for(const table of BACKUP_TABLES)rows(table,tables[table])
+  const contributions=tables.focus_reward_sessions as BackupRow[],blocks=tables.focus_reward_blocks as BackupRow[]
+  const blockCount=Math.floor(contributions.reduce((n,row)=>n+Number(row.seconds),0)/1500)
+  if(blockCount>1_000_000||blocks.length!==blockCount||blocks.some(row=>Number(row.id)>blockCount))fail('专注音符区块与累计秒数不符')
+  const blockIds=new Set(blocks.map(row=>row.id)),tokens=new Set(contributions.map(row=>row.token)),secondsByToken=new Map(contributions.map(row=>[row.token,Number(row.seconds)]))
+  for(const row of tables.focus_reward_presentations as BackupRow[]){
+    const ids=json(row.block_ids),covered=json(row.session_tokens)
+    if(String(row.token).length>160||!Array.isArray(ids)||!ids.length||new Set(ids).size!==ids.length||ids.some(id=>typeof id!=='string'||!blockIds.has(id))||!Array.isArray(covered)||new Set(covered).size!==covered.length||covered.some(token=>typeof token!=='string'||!tokens.has(token)))fail('音符演出回执无效')
+    if((ids as string[]).some(id=>Number(id)>Math.floor((covered as string[]).reduce((n,token)=>n+(secondsByToken.get(token)??0),0)/1500)))fail('音符演出回执超出贡献范围')
+  }
+  const rewardCauses=new Set<string>()
+  for(const row of tables.growth_events as BackupRow[]){if(typeof row.sync_cause==='string'&&row.sync_cause.startsWith('focus:reward-v1:')){
+    const id=row.sync_cause.slice('focus:reward-v1:'.length)
+    if(!blockIds.has(id)||rewardCauses.has(row.sync_cause)||row.points!==1||row.dimension!=='knowledge'||row.source!=='focus')fail('专注音符事件身份无效')
+    rewardCauses.add(row.sync_cause)
+  }}
+  const categoryIds=new Set((tables.learning_categories as BackupRow[]).map(row=>row.id))
+  const categoryReferences=(records:BackupRow[])=>{for(const row of records)if(row.category_id!==undefined&&row.category_id!==null&&!categoryIds.has(row.category_id))fail('学习分类引用缺失')}
+  for(const table of [...CATEGORY_TABLES,'local_knowledge_categories'] as const)categoryReferences(tables[table] as BackupRow[])
+  for(const row of tables.growth_resets as BackupRow[]){if(row.practice_json){const p=object(json(row.practice_json));for(const part of [object(p.before),object(json(p.after))])for(const table of PRACTICE_TABLES)categoryReferences(part[table] as BackupRow[])}}
+  const categoryObjectReference=(value:unknown)=>{const record=object(value);if(record.categoryId!==undefined&&record.categoryId!==null&&(!isCategoryId(record.categoryId)||!categoryIds.has(record.categoryId)))fail('草稿或提交回执的学习分类引用缺失')}
+  for(const table of ['focus_commits','journal_commits'] as const)for(const row of tables[table] as BackupRow[]){const receipt=object(json(row.result_json));categoryObjectReference(table==='focus_commits'?receipt.session:receipt.journal)}
+  for(const row of tables.focus_recovery as BackupRow[]){const recovery=object(json(row.body));categoryObjectReference(recovery);if(recovery.pendingCommit)categoryObjectReference(recovery.pendingCommit)}
+  for(const [key,value] of Object.entries(object(data.clientState)))if(key==='xinhai-journal-draft-v1'||key==='xinhai-review-draft-v1')categoryObjectReference(json(value))
   for(const table of ['stats','settings','growth_meta'] as const){const list=tables[table] as BackupRow[];if(list.length!==1||list[0].id!==1)fail(table+' 必须有唯一记录')}
   const recovery=tables.focus_recovery as BackupRow[];if(recovery.length>1||(recovery.length===1&&recovery[0].id!==1))fail('专注恢复记录重复')
-  const settings=object(json((tables.settings as BackupRow[])[0].json));exact(settings,Object.keys(DEFAULT_SETTINGS))
+  const settings=object(json((tables.settings as BackupRow[])[0].json))
+  // Older v2 snapshots predate portrait placement. Only this known omission is migrated.
+  if(!Object.hasOwn(settings,'characterPosition')||!Object.hasOwn(settings,'wallpaperThemeColors')||!Object.hasOwn(settings,'focusPanelLayout')||!Object.hasOwn(settings,'focusBackgroundBehavior')||!Object.hasOwn(settings,'focusRewardPresentation')){
+    data=JSON.parse(JSON.stringify(data));const migrated=object(data.tables),rows=migrated.settings as BackupRow[]
+    rows[0].json=JSON.stringify({...settings,...(!Object.hasOwn(settings,'characterPosition')?{characterPosition:null}:{}),...(!Object.hasOwn(settings,'wallpaperThemeColors')?{wallpaperThemeColors:{}}:{}),...(!Object.hasOwn(settings,'focusPanelLayout')?{focusPanelLayout:null}:{}),...(!Object.hasOwn(settings,'focusBackgroundBehavior')?{focusBackgroundBehavior:'wait'}:{}),...(!Object.hasOwn(settings,'focusRewardPresentation')?{focusRewardPresentation:'batch'}:{})})
+    return validateDatabaseSnapshot(data)
+  }
+  parseCharacterPosition(settings.characterPosition);parseCharacterScale(settings.characterScale);parseWallpaperThemeColors(settings.wallpaperThemeColors)
+  validateFocusPreferences(settings as unknown as import('./types').Settings)
+  // Genuine v1 omissions were migrated above. Current snapshots remain exact.
+  const settingKeys=Object.keys(DEFAULT_SETTINGS)
+  exact(settings,settingKeys)
+  parseHomeLayouts(settings.homeLayouts)
   for(const [key,defaultValue] of Object.entries(DEFAULT_SETTINGS)){
-    const v=settings[key]
+    const v=key==='characterArtId'&&!Object.hasOwn(settings,key)?DEFAULT_SETTINGS.characterArtId:settings[key]
     if(defaultValue!==null && !Array.isArray(defaultValue) && typeof v!==typeof defaultValue)fail('设置字段类型错误：'+key)
     if(typeof v==='number'&&!Number.isFinite(v))fail('设置数值无效')
     if(Array.isArray(defaultValue)&&!Array.isArray(v))fail('设置集合无效')
@@ -182,7 +254,7 @@ export function validateDatabaseSnapshot(value:unknown):DatabaseSnapshot {
   if(Object.keys(sequences).some(key=>!BACKUP_SEQUENCES.includes(key as never)))fail('序列含未知数据表')
   for(const table of BACKUP_SEQUENCES){const n=sequences[table]??0;if(!integer(n)||(tables[table] as BackupRow[]).some(row=>Number(row.id)>n))fail('自增序列小于已用编号')}
   validateBackupClientState(data.clientState)
-  return value as DatabaseSnapshot
+  return data as unknown as DatabaseSnapshot
 }
 
 export function parseDatabaseSnapshot(text:string):DatabaseSnapshot {

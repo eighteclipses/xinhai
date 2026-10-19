@@ -103,7 +103,7 @@ export async function open(key: string, role: SyncRole, wire: SyncWire, provider
 // Full record/schema validation belongs to the merge engine. Transport binds the sender
 // and checks the vector before it can influence which records the engine returns.
 export function authenticatedPacket(value: unknown, deviceId: string): SyncPacket {
-  if (!isObject(value) || value.version !== 1 || value.device !== deviceId || !Array.isArray(value.records) || !isObject(value.vector) || Object.keys(value.vector).length > 4096) throw Error('同步数据无效。')
+  if (!isObject(value) || (value.version !== 1 && value.version !== 2) || value.device !== deviceId || !Array.isArray(value.records) || !isObject(value.vector) || Object.keys(value.vector).length > 4096) throw Error('同步数据无效。')
   for (const [id, count] of Object.entries(value.vector)) if (!isId(id) || typeof count !== 'number' || !Number.isSafeInteger(count) || count < 0) throw Error('同步数据无效。')
   return value as unknown as SyncPacket
 }

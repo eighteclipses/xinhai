@@ -48,6 +48,7 @@ public class MainActivity extends Activity {
     private String pendingId, pendingMethod;
     private JSONObject pendingArgs;
     private final Map<String,Uri> noteUris=new HashMap<>();
+    private final Map<String,String> noteParents=new HashMap<>();
     private int skippedNotes=0;
 
     @Override public void onCreate(Bundle state){
@@ -64,6 +65,13 @@ public class MainActivity extends Activity {
         modelService=new ModelService(this,database);
         initializeResourceStore();
         if(BuildConfig.COMMERCIAL_EDITION)clientStateStore=new ClientStateStore(database);
+        else{
+            // Keep the personal learning database unchanged; migrate only the
+            // existing allowlisted WebView draft/preference keys into a sidecar.
+            SQLiteDatabase personalState=SQLiteDatabase.openOrCreateDatabase(new File(getFilesDir(),"personal-client-state.db"),null);
+            personalState.enableWriteAheadLogging();
+            clientStateStore=new ClientStateStore(personalState);
+        }
         FrameLayout frame=new FrameLayout(this);frame.setBackgroundColor(Color.rgb(16,16,16));
         web=new WebView(this);web.setBackgroundColor(Color.rgb(16,16,16));
         frame.addView(web,new FrameLayout.LayoutParams(-1,-1));setContentView(frame);
@@ -101,8 +109,8 @@ public class MainActivity extends Activity {
     @Override public void onWindowFocusChanged(boolean focused){super.onWindowFocusChanged(focused);if(focused)immersive();}
     @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);immersive();}
     @Override protected void onPause(){if(web!=null){web.evaluateJavascript("window.dispatchEvent(new Event('xinhai-pause'))",null);web.onPause();}super.onPause();}
-    @Override protected void onResume(){super.onResume();if(web!=null){web.onResume();web.evaluateJavascript("window.dispatchEvent(new Event('xinhai-resume'))",null);}}
-    @Override public void onBackPressed(){web.evaluateJavascript("(()=>{const b=document.querySelector('.restore-ui');if(b){b.click();return}const active=document.activeElement;if(active&&/INPUT|TEXTAREA/.test(active.tagName)){active.blur();return}const home=document.querySelector('.command-item');if(home&&!home.classList.contains('is-active')){home.click();return}window.XinhaiNative.call('minimize','{}')})()",null);}
+    @Override protected void onResume(){super.onResume();FocusReminder.resume(this);if(web!=null){web.onResume();web.evaluateJavascript("window.dispatchEvent(new Event('xinhai-resume'))",null);}}
+    @Override public void onBackPressed(){web.evaluateJavascript("(()=>{const d=document.querySelector('dialog.focus-reminder[open]')||document.querySelector('dialog.march-memory[open]')||document.querySelector('dialog.startup-announcement[open]');if(d){if(d.dispatchEvent(new Event('cancel',{cancelable:true})))d.close();return}const b=document.querySelector('.restore-ui');if(b){b.click();return}const active=document.activeElement;if(active&&/INPUT|TEXTAREA/.test(active.tagName)){active.blur();return}const home=document.querySelector('.command-item');if(home&&!home.classList.contains('is-active')){home.click();return}window.XinhaiNative.call('minimize','{}')})()",null);}
     @Override protected void onDestroy(){if(web!=null){web.removeJavascriptInterface("XinhaiNative");web.destroy();}worker.shutdown();super.onDestroy();}
 
     private static JSONObject ok(Object value)throws JSONException{return new JSONObject().put("ok",true).put("value",value==null?JSONObject.NULL:value);}
@@ -157,7 +165,7 @@ public class MainActivity extends Activity {
     }
 
     private ClientStateStore clientState() throws IOException {
-        if(clientStateStore==null)throw new IOException("此客户端存储入口仅用于商业版");
+        if(clientStateStore==null)throw new IOException("本机客户端状态存储尚未准备好");
         return clientStateStore;
     }
     private static String clientString(JSONObject args,String key)throws JSONException {
@@ -185,6 +193,9 @@ public class MainActivity extends Activity {
             case "knowledgeList":return knowledgeList();
             case "knowledgeSave":return knowledgeSave(args);
             case "knowledgeCreate":return knowledgeCreate(args.getString("title"),args.has("initialContent")&&!args.isNull("initialContent")?args.getString("initialContent"):null,args.has("expectedRoot")&&!args.isNull("expectedRoot")?args.getString("expectedRoot"):null);
+            case "knowledgeRename":return knowledgeRename(args);
+            case "knowledgeDelete":knowledgeDelete(args);return null;
+            case "knowledgeSetCategory":return knowledgeSetCategory(args);
             case "knowledgeFolder":return "平板笔记保存在本机。使用“选择已有库”连接共享文件夹，或在系统文件管理器中打开你授权的文件夹。";
             case "backupContext":
                 if(!resourceMigrationReady())throw new IOException("资源迁移未完成，暂不能创建备份。");
@@ -200,6 +211,9 @@ public class MainActivity extends Activity {
                 openExternal(Uri.parse("obsidian://open"));return null;
             case "elapsedRealtime":return SystemClock.elapsedRealtime();
             case "keepAwake":runOnUiThread(()->web.setKeepScreenOn(args.optBoolean("enabled")));return null;
+            case "focusReminder":FocusReminder.update(this,args);return null;
+            case "focusReminderStatus":return FocusReminder.status(this);
+            case "focusReminderRequestAccess":FocusReminder.requestAccess(this,args.getString("access"));return null;
             case "minimize":runOnUiThread(()->moveTaskToBack(true));return null;
             case "close":runOnUiThread(()->finish());return null;
             case "themeImportFinish":return themeFiles.finishImport(args);
@@ -502,24 +516,32 @@ public class MainActivity extends Activity {
         return knowledgeList(activeKnowledgeTree());
     }
     private synchronized JSONObject knowledgeList(String tree)throws Exception{
-        JSONArray notes=new JSONArray();skippedNotes=0;noteUris.clear();
-        if(tree.isEmpty())scanLocal(knowledgeDir(),"",notes,0);else{Uri root=Uri.parse(tree);scanTree(root,DocumentsContract.getTreeDocumentId(root),"",notes,0);}
-        List<JSONObject> sorted=new ArrayList<>();for(int i=0;i<notes.length();i++)sorted.add(notes.getJSONObject(i));sorted.sort((a,b)->Long.compare(b.optLong("modifiedAt"),a.optLong("modifiedAt")));
-        return new JSONObject().put("root",tree.isEmpty()?"本机学习库":tree).put("notes",new JSONArray(sorted)).put("skipped",skippedNotes);
+        JSONArray notes=new JSONArray();skippedNotes=0;noteUris.clear();noteParents.clear();List<KnowledgeCandidate> candidates=new ArrayList<>();
+        if(tree.isEmpty())scanLocal(knowledgeDir(),"",candidates,0);else{Uri root=Uri.parse(tree);scanTree(root,DocumentsContract.getTreeDocumentId(root),"",candidates,0);}
+        candidates.sort((a,b)->{int time=Long.compare(b.modified,a.modified);return time!=0?time:a.path.compareTo(b.path);});
+        for(KnowledgeCandidate candidate:candidates){
+            if(notes.length()>=2000){skippedNotes++;continue;}
+            try{byte[] bytes=readBounded(candidate.file!=null?new FileInputStream(candidate.file):getContentResolver().openInputStream(candidate.uri),2*1024*1024);notes.put(note(candidate.path,bytes,candidate.modified));}
+            catch(IOException failure){skippedNotes++;}
+        }
+        return new JSONObject().put("root",tree.isEmpty()?"本机学习库":tree).put("notes",notes).put("skipped",skippedNotes);
     }
-    private JSONObject note(String path,byte[] bytes,long modified)throws Exception{return new JSONObject().put("path",path).put("title",path.substring(path.lastIndexOf('/')+1).replaceFirst("(?i)\\.md$","")).put("content",new String(bytes,StandardCharsets.UTF_8)).put("revision",hash(bytes)).put("modifiedAt",modified);}
-    private void scanLocal(File dir,String prefix,JSONArray notes,int depth)throws Exception{
+    private String currentKnowledgeRoot(){String tree=activeKnowledgeTree();return tree.isEmpty()?"本机学习库":tree;}
+    private String knowledgeCategory(String root,String path){try(Cursor cursor=database.rawQuery("SELECT category_id FROM local_knowledge_categories WHERE root=? AND path=?",new String[]{root,path})){return cursor.moveToFirst()?cursor.getString(0):null;}}
+    private JSONObject note(String path,byte[] bytes,long modified)throws Exception{return new JSONObject().put("path",path).put("title",path.substring(path.lastIndexOf('/')+1).replaceFirst("(?i)\\.md$","")).put("content",new String(bytes,StandardCharsets.UTF_8)).put("revision",hash(bytes)).put("modifiedAt",modified).put("categoryId",knowledgeCategory(currentKnowledgeRoot(),path)==null?JSONObject.NULL:knowledgeCategory(currentKnowledgeRoot(),path));}
+    private static final class KnowledgeCandidate{final String path;final File file;final Uri uri;final long modified;KnowledgeCandidate(String path,File file,Uri uri,long modified){this.path=path;this.file=file;this.uri=uri;this.modified=modified;}}
+    private void scanLocal(File dir,String prefix,List<KnowledgeCandidate> notes,int depth)throws Exception{
         if(depth>12){skippedNotes++;return;}File[] files=dir.listFiles();if(files==null)throw new IOException("无法读取学习库");
-        for(File file:files){if(file.getName().startsWith("."))continue;String path=prefix+file.getName();if(file.isDirectory())scanLocal(file,path+"/",notes,depth+1);else if(path.toLowerCase(Locale.ROOT).endsWith(".md")){if(notes.length()>=2000||file.length()>2*1024*1024){skippedNotes++;continue;}notes.put(note(path,readBounded(new FileInputStream(file),2*1024*1024),file.lastModified()));}}
+        for(File file:files){if(file.getName().startsWith("."))continue;if(!file.getCanonicalPath().equals(file.getAbsolutePath())){skippedNotes++;continue;}String path=prefix+file.getName();if(file.isDirectory())scanLocal(file,path+"/",notes,depth+1);else if(path.toLowerCase(Locale.ROOT).endsWith(".md")){if(file.length()>2*1024*1024){skippedNotes++;continue;}notes.add(new KnowledgeCandidate(path,file,null,file.lastModified()));}}
     }
-    private void scanTree(Uri tree,String documentId,String prefix,JSONArray notes,int depth)throws Exception{
+    private void scanTree(Uri tree,String documentId,String prefix,List<KnowledgeCandidate> notes,int depth)throws Exception{
         if(depth>12){skippedNotes++;return;}
         String[] columns={DocumentsContract.Document.COLUMN_DOCUMENT_ID,DocumentsContract.Document.COLUMN_DISPLAY_NAME,DocumentsContract.Document.COLUMN_MIME_TYPE,DocumentsContract.Document.COLUMN_SIZE,DocumentsContract.Document.COLUMN_LAST_MODIFIED};
         Uri children=DocumentsContract.buildChildDocumentsUriUsingTree(tree,documentId);
         try(Cursor c=getContentResolver().query(children,columns,null,null,null)){if(c==null)throw new IOException("无法读取授权文件夹，请重新选择。");while(c.moveToNext()){
             String id=c.getString(0),name=c.getString(1),mime=c.getString(2),path=prefix+name;if(name.startsWith("."))continue;
             if(DocumentsContract.Document.MIME_TYPE_DIR.equals(mime))scanTree(tree,id,path+"/",notes,depth+1);
-            else if(name.toLowerCase(Locale.ROOT).endsWith(".md")){if(notes.length()>=2000||c.getLong(3)>2*1024*1024){skippedNotes++;continue;}Uri uri=DocumentsContract.buildDocumentUriUsingTree(tree,id);try{byte[] bytes=readBounded(getContentResolver().openInputStream(uri),2*1024*1024);noteUris.put(path,uri);notes.put(note(path,bytes,c.getLong(4)));}catch(IOException e){skippedNotes++;}}
+            else if(name.toLowerCase(Locale.ROOT).endsWith(".md")){if(c.getLong(3)>2*1024*1024){skippedNotes++;continue;}Uri uri=DocumentsContract.buildDocumentUriUsingTree(tree,id);noteUris.put(path,uri);noteParents.put(path,documentId);notes.add(new KnowledgeCandidate(path,null,uri,c.getLong(4)));}
         }}
     }
     private synchronized JSONObject knowledgeSave(JSONObject input)throws Exception{
@@ -545,6 +567,10 @@ public class MainActivity extends Activity {
     private void writeUri(Uri uri,byte[] bytes)throws IOException{try(OutputStream out=getContentResolver().openOutputStream(uri,"wt")){if(out==null)throw new IOException("无法写入笔记");out.write(bytes);out.flush();}}
     private Uri createKnowledgeDocument(String tree,String name)throws Exception{
         Uri treeUri=Uri.parse(tree);String rootId=DocumentsContract.getTreeDocumentId(treeUri);
+        return createKnowledgeDocumentAt(tree,rootId,name);
+    }
+    private Uri createKnowledgeDocumentAt(String tree,String rootId,String name)throws Exception{
+        Uri treeUri=Uri.parse(tree);
         Uri children=DocumentsContract.buildChildDocumentsUriUsingTree(treeUri,rootId);
         HashSet<String> previousIds=new HashSet<>();
         // The normal note list skips oversized/unreadable files. Check every
@@ -573,6 +599,138 @@ public class MainActivity extends Activity {
         return knowledgeSave(new JSONObject().put("path",name+".md").put("content",initialContent==null?"# "+title.trim()+"\n\n":initialContent).put("revision",JSONObject.NULL));
     }
 
+    private File knowledgeFile(String path)throws Exception{
+        File root=knowledgeDir(),file=new File(root,path);
+        if(!file.getCanonicalPath().startsWith(root.getCanonicalPath()+File.separator)||!file.getCanonicalPath().equals(file.getAbsolutePath()))throw new IOException("笔记必须位于学习库内，不能是符号链接");
+        return file;
+    }
+    private byte[] knowledgeBytes(String path,String tree)throws Exception{
+        if(tree.isEmpty()){File file=knowledgeFile(path);if(!file.isFile())throw new IOException("笔记已移动或删除，请刷新后重试。");return readBounded(new FileInputStream(file),2*1024*1024);}
+        Uri uri=noteUris.get(path);if(uri==null)throw new IOException("笔记已移动、删除或超出读取范围，请刷新后重试。");
+        return readBounded(getContentResolver().openInputStream(uri),2*1024*1024);
+    }
+    private byte[] checkedKnowledgeTarget(JSONObject input)throws Exception{
+        String tree=activeKnowledgeTree(),root=tree.isEmpty()?"本机学习库":tree,path=input.getString("path");
+        if(!root.equals(input.getString("expectedRoot")))throw new IOException("知识库已切换，未修改笔记。请回到原库后重试。");
+        if(path.startsWith("/")||path.contains("\\")||path.matches(".*[\\x00-\\x1f].*")||!path.toLowerCase(Locale.ROOT).endsWith(".md"))throw new IOException("笔记路径无效");
+        for(String part:path.split("/",-1))if(part.isEmpty()||part.equals(".")||part.equals(".."))throw new IOException("笔记路径无效");
+        knowledgeList();byte[] bytes=knowledgeBytes(path,tree);
+        if(!hash(bytes).equals(input.getString("revision")))throw new IOException("笔记已在外部修改。请保留当前草稿，刷新后重试。");
+        return bytes;
+    }
+    private synchronized JSONObject knowledgeSetCategory(JSONObject input)throws Exception{
+        byte[] bytes=checkedKnowledgeTarget(input);String path=input.getString("path"),root=currentKnowledgeRoot();
+        if(!input.has("categoryId")||!input.has("expectedCategoryId"))throw new IOException("分类参数不完整，请刷新后重试。");
+        Object categoryValue=input.get("categoryId"),expectedValue=input.get("expectedCategoryId");
+        if(categoryValue!=JSONObject.NULL&&!(categoryValue instanceof String)||expectedValue!=JSONObject.NULL&&!(expectedValue instanceof String))throw new IOException("分类参数无效。");
+        String category=categoryValue==JSONObject.NULL?null:(String)categoryValue,expected=expectedValue==JSONObject.NULL?null:(String)expectedValue;
+        database.beginTransaction();try{
+            String current=knowledgeCategory(root,path);if(!Objects.equals(current,expected))throw new IOException("笔记分类已变化，请刷新后重试。");
+            if(category!=null){
+                if(!category.matches("(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"))throw new IOException("分类编号无效。");
+                try(Cursor cursor=database.rawQuery("SELECT archived_at FROM learning_categories WHERE id=?",new String[]{category})){
+                    if(!cursor.moveToFirst())throw new IOException("分类已不存在，请刷新后重试。");
+                    if(!cursor.isNull(0)&&!Objects.equals(category,current))throw new IOException("此分类已停用，请选择启用的分类。");
+                }
+            }
+            database.execSQL("DELETE FROM local_knowledge_categories WHERE root=? AND path=?",new Object[]{root,path});
+            if(category!=null)database.execSQL("INSERT INTO local_knowledge_categories(root,path,category_id) VALUES(?,?,?)",new Object[]{root,path,category});
+            database.setTransactionSuccessful();
+        }finally{database.endTransaction();}
+        return note(path,bytes,activeKnowledgeTree().isEmpty()?knowledgeFile(path).lastModified():System.currentTimeMillis());
+    }
+    private void copyKnowledgeCategory(String root,String oldPath,String newPath)throws IOException{
+        database.beginTransaction();try{
+            if(knowledgeCategory(root,newPath)!=null)throw new IOException("目标标题已有分类记录，未覆盖，请换一个标题。");
+            String category=knowledgeCategory(root,oldPath);
+            if(category!=null)database.execSQL("INSERT INTO local_knowledge_categories(root,path,category_id) VALUES(?,?,?)",new Object[]{root,newPath,category});
+            database.setTransactionSuccessful();
+        }finally{database.endTransaction();}
+    }
+    private void removeKnowledgeCategory(String root,String path){database.execSQL("DELETE FROM local_knowledge_categories WHERE root=? AND path=?",new Object[]{root,path});}
+    private synchronized JSONObject knowledgeRename(JSONObject input)throws Exception{
+        byte[] bytes=checkedKnowledgeTarget(input);String path=input.getString("path"),tree=activeKnowledgeTree(),revision=input.getString("revision");
+        String title=input.getString("title").trim().replaceFirst("(?i)\\.md$","");
+        if(title.isEmpty()||title.length()>100||title.matches(".*[<>:\"/\\\\|?*\\x00-\\x1f].*")||title.matches(".*[. ]$")||title.matches("(?i)^(con|prn|aux|nul|com[0-9]|lpt[0-9])(?:\\..*)?$"))throw new IOException("请使用有效的笔记标题（最多 100 字，不含路径或特殊符号）");
+        String name=title+".md",next=path.substring(0,path.lastIndexOf('/')+1)+name;
+        if(next.equals(path))return note(path,bytes,System.currentTimeMillis());
+        boolean caseOnly=next.equalsIgnoreCase(path);
+        String categoryRoot=currentKnowledgeRoot();if(knowledgeCategory(categoryRoot,next)!=null)throw new IOException("目标标题已有分类记录，未覆盖，请换一个标题。");
+        if(tree.isEmpty()){
+            File original=knowledgeFile(path),target=knowledgeFile(next);File[] siblings=original.getParentFile().listFiles();if(siblings==null)throw new IOException("无法检查现有文件名，未修改笔记。");
+            // Private Android storage is case-sensitive: exclude only the exact
+            // original entry, then keep the ordinary exclusive-copy safeguards.
+            for(File sibling:siblings)if(sibling.getName().equalsIgnoreCase(name)&&(!caseOnly||!sibling.getName().equals(original.getName())))throw new IOException("同名笔记或文件夹已存在，请换一个标题。");
+            if(!target.createNewFile())throw new IOException("同名笔记已存在，请换一个标题。");
+            try(FileOutputStream out=new FileOutputStream(target)){out.write(bytes);out.getFD().sync();}catch(Exception failure){target.delete();throw failure;}
+            if(!hash(readBounded(new FileInputStream(target),2*1024*1024)).equals(revision)||!hash(knowledgeBytes(path,tree)).equals(revision))throw new IOException("改名期间文件发生变化；原文件和新副本均保留，请刷新后核对。");
+            copyKnowledgeCategory(categoryRoot,path,next);
+            if(!original.delete())throw new IOException("新标题的副本已保存，但原文件未能移除。两份文件均保留，请刷新后处理。");
+            removeKnowledgeCategory(categoryRoot,path);
+            return note(next,bytes,target.lastModified());
+        }
+        Uri original=noteUris.get(path);String parent=noteParents.get(path);if(parent==null)throw new IOException("无法核对原笔记文件夹，未改名。");
+        if(caseOnly){
+            // A SAF provider may use a case-insensitive filesystem. Creating a
+            // second document can return the original, so rename that document
+            // through the provider instead of copying/deleting its alias.
+            String originalId=DocumentsContract.getDocumentId(original),oldName=path.substring(path.lastIndexOf('/')+1);boolean found=false;
+            HashSet<String> siblingIds=new HashSet<>();
+            Uri children=DocumentsContract.buildChildDocumentsUriUsingTree(Uri.parse(tree),parent);
+            try(Cursor c=getContentResolver().query(children,new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID,DocumentsContract.Document.COLUMN_DISPLAY_NAME,DocumentsContract.Document.COLUMN_FLAGS},null,null,null)){
+                if(c==null)throw new IOException("无法核对文件夹，未修改大小写。");
+                while(c.moveToNext()){
+                    String id=c.getString(0),displayName=c.getString(1);siblingIds.add(id);
+                    if(originalId.equals(id)){
+                        if(!oldName.equals(displayName))throw new IOException("原笔记标题已变化，请刷新后重试。");
+                        if((c.getInt(2)&DocumentsContract.Document.FLAG_SUPPORTS_RENAME)==0)throw new IOException("此存储服务不支持安全修改文件名大小写，请在原文件管理器中处理。");
+                        found=true;
+                    }else if(name.equalsIgnoreCase(displayName))throw new IOException("同名笔记或文件夹已存在，请换一个标题。");
+                }
+            }
+            if(!found)throw new IOException("原笔记已移动或删除，请刷新后重试。");
+            copyKnowledgeCategory(categoryRoot,path,next);
+            Uri renamed;
+            try{
+                renamed=DocumentsContract.renameDocument(getContentResolver(),original,name);
+                if(renamed==null)throw new IOException("存储服务未返回改名结果。");
+            }catch(Exception failure){
+                // Clean the staged row only when readback proves the provider
+                // left the original name and body intact. Never delete a file.
+                try(Cursor c=getContentResolver().query(original,new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME},null,null,null)){
+                    if(c!=null&&c.moveToFirst()&&oldName.equals(c.getString(0))&&hash(readBounded(getContentResolver().openInputStream(original),2*1024*1024)).equals(revision))removeKnowledgeCategory(categoryRoot,next);
+                }catch(Exception ignored){}
+                throw new IOException("大小写修改未完成；正文未重写，原分类记录已保留，请刷新后核对。",failure);
+            }
+            String renamedId=DocumentsContract.getDocumentId(renamed);
+            if(siblingIds.contains(renamedId)&&!originalId.equals(renamedId))throw new IOException("存储服务返回了其他文件，未写入或删除正文。原分类记录已保留，请刷新核对。");
+            try(Cursor c=getContentResolver().query(renamed,new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME},null,null,null)){
+                if(c==null||!c.moveToFirst()||!name.equals(c.getString(0)))throw new IOException("存储服务未保留所选大小写；原分类记录已保留，请刷新核对。");
+            }
+            byte[] renamedBytes=readBounded(getContentResolver().openInputStream(renamed),2*1024*1024);
+            if(!hash(renamedBytes).equals(revision))throw new IOException("改名期间正文发生变化；文件与原分类记录已保留，请刷新后核对。");
+            noteUris.remove(path);noteParents.remove(path);noteUris.put(next,renamed);noteParents.put(next,parent);
+            removeKnowledgeCategory(categoryRoot,path);
+            return note(next,renamedBytes,System.currentTimeMillis());
+        }
+        Uri target=createKnowledgeDocumentAt(tree,parent,name);
+        try{writeUri(target,bytes);}catch(Exception failure){try{DocumentsContract.deleteDocument(getContentResolver(),target);}catch(Exception ignored){}throw failure;}
+        if(!hash(readBounded(getContentResolver().openInputStream(target),2*1024*1024)).equals(revision)||!hash(knowledgeBytes(path,tree)).equals(revision))throw new IOException("改名期间文件发生变化；原文件和新副本均保留，请刷新后核对。");
+        copyKnowledgeCategory(categoryRoot,path,next);
+        if(!DocumentsContract.deleteDocument(getContentResolver(),original))throw new IOException("新标题的副本已保存，但原文件未能移除。两份文件均保留，请刷新后处理。");
+        removeKnowledgeCategory(categoryRoot,path);
+        noteUris.remove(path);noteParents.remove(path);noteUris.put(next,target);noteParents.put(next,parent);
+        return note(next,bytes,System.currentTimeMillis());
+    }
+    private synchronized void knowledgeDelete(JSONObject input)throws Exception{
+        if(!"删除笔记".equals(input.optString("confirmation")))throw new IOException("请明确确认删除这篇笔记。");
+        checkedKnowledgeTarget(input);String path=input.getString("path"),tree=activeKnowledgeTree();
+        boolean deleted=tree.isEmpty()?knowledgeFile(path).delete():DocumentsContract.deleteDocument(getContentResolver(),noteUris.get(path));
+        if(!deleted)throw new IOException("笔记未能删除，请检查文件权限后重试。");
+        removeKnowledgeCategory(currentKnowledgeRoot(),path);
+        noteUris.remove(path);noteParents.remove(path);
+    }
+
     private WebResourceResponse resource(WebResourceRequest request){
         Uri mediaUri=request.getUrl();String mediaHost=mediaUri.getHost();
         if(!BuildConfig.COMMERCIAL_EDITION&&!request.isForMainFrame()&&"https".equals(mediaUri.getScheme())&&mediaHost!=null&&mediaHost.matches("(?:[a-zA-Z0-9-]+\\.)*music\\.(126\\.net|163\\.com)")&&mediaUri.getPort()==-1)return null;
@@ -587,12 +745,54 @@ public class MainActivity extends Activity {
             }
             Map<String,String> headers=new HashMap<>();headers.put("Accept-Ranges","bytes");headers.put("Cache-Control","no-cache");headers.put("X-Content-Type-Options","nosniff");
             if("html".equals(ext))headers.put("Content-Security-Policy","default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: https://*.music.126.net https://*.music.163.com; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'");
-            String range=request.getRequestHeaders().get("Range");if(range==null)range=request.getRequestHeaders().get("range");long start=0,end=size-1;
-            if(range!=null&&range.matches("bytes=\\d+-\\d*")){String[] pair=range.substring(6).split("-",-1);start=Long.parseLong(pair[0]);if(!pair[1].isEmpty())end=Math.min(end,Long.parseLong(pair[1]));if(start>=size||end<start){stream.close();headers.put("Content-Range","bytes */"+size);return new WebResourceResponse(mime,null,416,"Range Not Satisfiable",headers,new ByteArrayInputStream(new byte[0]));}long remain=start;while(remain>0){long skipped=stream.skip(remain);if(skipped<=0)throw new IOException("Cannot seek");remain-=skipped;}headers.put("Content-Range","bytes "+start+"-"+end+"/"+size);}
-            long length=Math.max(0,end-start+1);headers.put("Content-Length",Long.toString(length));InputStream bounded=new LimitedStream(stream,length);
-            return new WebResourceResponse(mime,Arrays.asList("html","css","js","json","svg").contains(ext)?"UTF-8":null,range==null?200:206,range==null?"OK":"Partial Content",headers,bounded);
+            String range=request.getRequestHeaders().get("Range");if(range==null)range=request.getRequestHeaders().get("range");long endExclusive=size;
+            if(range!=null){
+                try{long[] bounds=mediaRange(range,size);endExclusive=bounds[1]+1;headers.put("Content-Range","bytes "+bounds[0]+"-"+bounds[1]+"/"+size);}
+                catch(IOException invalid){stream.close();headers.put("Content-Range","bytes */"+size);return new WebResourceResponse(mime,null,416,"Range Not Satisfiable",headers,new ByteArrayInputStream(new byte[0]));}
+            }
+            // Android WebView's stream loader already applies the request Range
+            // to the supplied stream and derives Content-Length. Supply the
+            // whole resource starting at zero: manually skipping here moves the
+            // position twice. Stop reads at the absolute end of a bounded range;
+            // WebView seeks its start but does not itself truncate the body.
+            return new WebResourceResponse(mime,Arrays.asList("html","css","js","json","svg").contains(ext)?"UTF-8":null,range==null?200:206,range==null?"OK":"Partial Content",headers,new RangeBodyStream(stream,size,endExclusive));
         }catch(Exception e){return new WebResourceResponse("text/plain","UTF-8",404,"Not Found",new HashMap<>(),new ByteArrayInputStream(new byte[0]));}
     }
-    private static class LimitedStream extends FilterInputStream{long remaining;LimitedStream(InputStream in,long length){super(in);remaining=length;}@Override public int read()throws IOException{if(remaining<=0)return -1;int v=super.read();if(v!=-1)remaining--;return v;}@Override public int read(byte[] b,int offset,int length)throws IOException{if(remaining<=0)return -1;int n=in.read(b,offset,(int)Math.min(remaining,length));if(n>0)remaining-=n;return n;}}
+    private static long[] mediaRange(String value,long size)throws IOException{
+        if(size<=0||!value.matches("bytes=\\d*-\\d*"))throw new IOException("Invalid range");
+        String[] pair=value.substring(6).split("-",-1);
+        try{
+            if(pair[0].isEmpty()){
+                if(pair[1].isEmpty())throw new IOException("Invalid range");
+                long count=Long.parseLong(pair[1]);if(count<=0)throw new IOException("Invalid range");
+                return new long[]{Math.max(0,size-count),size-1};
+            }
+            long start=Long.parseLong(pair[0]),end=pair[1].isEmpty()?size-1:Math.min(size-1,Long.parseLong(pair[1]));
+            if(start>=size||end<start)throw new IOException("Invalid range");
+            return new long[]{start,end};
+        }catch(NumberFormatException invalid){throw new IOException("Invalid range",invalid);}
+    }
+    private static final class RangeBodyStream extends FilterInputStream{
+        private final long size,end;private long position;
+        RangeBodyStream(InputStream stream,long size,long end){super(stream);this.size=size;this.end=end;}
+        // WebView computes the requested range against the complete resource,
+        // then calls skip(start). Advertise that size without pre-seeking it.
+        @Override public int available(){return (int)Math.min(Integer.MAX_VALUE,Math.max(0,size-position));}
+        @Override public long skip(long count)throws IOException{
+            if(count<=0||position>=end)return 0;
+            long skipped=in.skip(Math.min(count,end-position));position+=skipped;return skipped;
+        }
+        @Override public int read()throws IOException{
+            if(position>=end)return -1;int value=in.read();if(value>=0)position++;return value;
+        }
+        @Override public int read(byte[] bytes,int offset,int length)throws IOException{
+            if(bytes==null)throw new NullPointerException();
+            if(offset<0||length<0||offset>bytes.length-length)throw new IndexOutOfBoundsException();
+            if(length==0)return 0;if(position>=end)return -1;
+            int count=in.read(bytes,offset,(int)Math.min(length,end-position));if(count>0)position+=count;return count;
+        }
+        @Override public boolean markSupported(){return false;}
+        @Override public synchronized void reset()throws IOException{throw new IOException("Range stream does not support reset");}
+    }
     private static String mime(String ext){switch(ext){case "html":return "text/html";case "js":return "application/javascript";case "css":return "text/css";case "json":return "application/json";case "svg":return "image/svg+xml";case "png":return "image/png";case "jpg":case "jpeg":return "image/jpeg";case "webp":return "image/webp";case "mp4":return "video/mp4";case "webm":return "video/webm";case "ogg":return "audio/ogg";case "mp3":return "audio/mpeg";case "wav":return "audio/wav";case "m4a":return "audio/mp4";case "ttf":return "font/ttf";case "woff2":return "font/woff2";default:return "application/octet-stream";}}
 }

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "snapshot": "0.2.34-source.0",
+  "snapshot": "0.2.35-source.0",
   "date": "2026-10-20",
-  "originCommit": "9170e98408448ac555d401fc59e1e66c5716a146",
+  "originCommit": "38bd954cf85768518339bc03ce21d95db88ee1df",
   "excludedFromHashList": [
     "docs/source-manifest.json"
   ],
@@ -28,8 +28,8 @@
     },
     {
       "path": "BUILD.md",
-      "bytes": 3568,
-      "sha256": "2824308437c5da2b2db8deb6f6c352083531395f72e4f94089d861afdc85aae6"
+      "bytes": 4060,
+      "sha256": "0cd3a7ac9bb82d8e72e4be9cdeb7a4a7afdfbd434627d6288ab972719d7f76f9"
     },
     {
       "path": "LICENSE",
@@ -43,8 +43,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5720,
-      "sha256": "44c641735da1b94b94aecdc6a6c3d7332f949d6df580647a3e215e1aa0220366"
+      "bytes": 5886,
+      "sha256": "6baa2560c9d37b51812d0fff4fedeb909a7d47249186d23ab166ec1675b44472"
     },
     {
       "path": "THIRD-PARTY-NOTICES.md",
@@ -54,7 +54,7 @@
     {
       "path": "android/app/build.gradle",
       "bytes": 1305,
-      "sha256": "4e745f606ef79a26a6a10bfb488f394bd742ea5139686b93088e87e7459a7280"
+      "sha256": "458ce75dd7924b05b10cde140d0a93dcabc3afbf46eca7c99a45b2f607664ecc"
     },
     {
       "path": "android/app/src/main/AndroidManifest.xml",
@@ -83,8 +83,8 @@
     },
     {
       "path": "android/app/src/main/java/com/xinhai/study/MainActivity.java",
-      "bytes": 74895,
-      "sha256": "f28dfac0cf04175a4f01e6d163af7cee19cf2666f230248e7fabbfb540a2c2cd"
+      "bytes": 81923,
+      "sha256": "3f265883df90ea2dff6037d79299884026ef3b2d981524e384c5bab91e2fb23a"
     },
     {
       "path": "android/app/src/main/java/com/xinhai/study/ModelService.java",
@@ -208,18 +208,18 @@
     },
     {
       "path": "docs/source-allowlist.json",
-      "bytes": 26228,
-      "sha256": "fbf8cea3a4d9ab123b61a6e30ce2b42d2df78c7314e67aca20eb343752ad5480"
+      "bytes": 26531,
+      "sha256": "0a4ac0bc51e6ed760136b8b3867d62f7da0ed85f63e40eb4af31dfa307f0edff"
     },
     {
       "path": "docs/source-validation.json",
-      "bytes": 1292,
-      "sha256": "550972527345e01a57aadb023d0b6f9ac6c62c12111a0a91d521369bc60eba94"
+      "bytes": 2253,
+      "sha256": "20367f5003a66b2dfc7dd028798d36eee293f77c94207689497557c366419de7"
     },
     {
       "path": "docs/source-validation.md",
-      "bytes": 2880,
-      "sha256": "9e9338909439dc61fe645a0ad04471e691e15b8ccb78d9e87ca5e6d119c38079"
+      "bytes": 3675,
+      "sha256": "db13a728e1204054ab3aaa81c84e77dcfefa4dfc58795536d2997644a17ca9bb"
     },
     {
       "path": "electron-builder.yml",
@@ -239,12 +239,12 @@
     {
       "path": "package-lock.json",
       "bytes": 267185,
-      "sha256": "8c3d22efaa1d5a2236a5a803613edcd372d967f1bb403bba78813d8fb0ae6948"
+      "sha256": "d93c4a483a7d1ba60271893bc385b5ebdcf5e3f9b913a52bbe175a73a9d38b2a"
     },
     {
       "path": "package.json",
-      "bytes": 1800,
-      "sha256": "4e3a05b9e578ed1888fc59a8671ef05eb8960622a7aa4df40361f3e106eb6026"
+      "bytes": 1910,
+      "sha256": "615d9bbb326dcf6d54b20fb9f8816fb8fce3da6f1a867fd816839b8105a1c823"
     },
     {
       "path": "resources/licenses/RhineLabUI-MIT.txt",
@@ -285,6 +285,16 @@
       "path": "scripts/check-local-scoring.cjs",
       "bytes": 8263,
       "sha256": "c06a59e476fdf6b09cc8504af70678b97b7b4cd5a7a00cd4c9f32ed91c17ab59"
+    },
+    {
+      "path": "scripts/check-music-management-store.cjs",
+      "bytes": 7512,
+      "sha256": "6da82cd8ffe0cc87bdf3cb749e837b4dc11bb4bf04741f3696ad533d43436245"
+    },
+    {
+      "path": "scripts/check-music-management.cjs",
+      "bytes": 18453,
+      "sha256": "7ba491b2a7a683e9970a28ab8f6dab704d52e47cb789eff1715204ebd06afa8b"
     },
     {
       "path": "scripts/check-scene-motion.cjs",
@@ -368,8 +378,8 @@
     },
     {
       "path": "src/main/index.ts",
-      "bytes": 22283,
-      "sha256": "32ee4ab9b9afbc58299764aa0b949cef7e4e37c258f163d5f500119b6eddc355"
+      "bytes": 23244,
+      "sha256": "022f4a7db1a45a604b9c2cb5b5d0482508899e9c990ce88daa9f4e60a89864ba"
     },
     {
       "path": "src/main/knowledge.ts",
@@ -398,8 +408,8 @@
     },
     {
       "path": "src/main/music.ts",
-      "bytes": 2282,
-      "sha256": "1677f5b57dcf4eeb62aadeae1685c89b7020d48d7bd4087dfc700cdb1f63f32e"
+      "bytes": 4908,
+      "sha256": "ce175fac8ce5e90d265bfce7c4293870df7cb86c70627b5284a6ccc065d73770"
     },
     {
       "path": "src/main/netease.ts",
@@ -463,8 +473,8 @@
     },
     {
       "path": "src/mobile/api.ts",
-      "bytes": 12785,
-      "sha256": "595784d6781db3ff248e3d033f77aeb0b2a20ea0e57157e4d6355c6dea513d46"
+      "bytes": 13049,
+      "sha256": "b346191b04d3bba6321fefa04cdc34d45aa61abc817c5bb711acce58ecb57844"
     },
     {
       "path": "src/mobile/durableClientStorage.ts",
@@ -488,8 +498,8 @@
     },
     {
       "path": "src/mobile/music.ts",
-      "bytes": 656,
-      "sha256": "dae4993662d2a1a23c8e66bbcc6aafe8d85d01e79465b1de2bc5b07289c1a760"
+      "bytes": 1356,
+      "sha256": "aafe9c2580923891180f5741e16a9da2822dd48065c27350b19fddfdfe67589c"
     },
     {
       "path": "src/mobile/native.ts",
@@ -508,8 +518,8 @@
     },
     {
       "path": "src/preload/index.ts",
-      "bytes": 14088,
-      "sha256": "d7cf01c8b279326f3695053902634e0e73c28d9d0eec3ec319028774ea2f7148"
+      "bytes": 14526,
+      "sha256": "7911c0733b93df9d583922b1a4f71e87a6e03c75651f8626de926d5872cf57cf"
     },
     {
       "path": "src/renderer/index.html",
@@ -623,8 +633,8 @@
     },
     {
       "path": "src/renderer/src/components/CustomizationIndex.tsx",
-      "bytes": 5397,
-      "sha256": "e2f8407141337f51bf31151f5abc530f5a4e506b1eff098cbcbdc203289b7cbd"
+      "bytes": 5475,
+      "sha256": "f8975c5d1fe777bae99dff44a2d0790e79c84ac4cfbb25df41387f490565ef80"
     },
     {
       "path": "src/renderer/src/components/DataReset.tsx",
@@ -723,8 +733,8 @@
     },
     {
       "path": "src/renderer/src/components/MusicPlayer.tsx",
-      "bytes": 11618,
-      "sha256": "b942ed0e807030b2ec47e5d47cb4befc76160c99d6438832ee99ebc992e052d3"
+      "bytes": 18112,
+      "sha256": "4d46f76d148724a77744b52d6f998c45322cc95c683d74a516e2aada6a6abf29"
     },
     {
       "path": "src/renderer/src/components/Nav.tsx",
@@ -793,8 +803,8 @@
     },
     {
       "path": "src/renderer/src/components/StartupAnnouncement.tsx",
-      "bytes": 7767,
-      "sha256": "534e75eb33d537d64aa2ef7b276f9592de4072de77b9dead9c9f10b6c0218ecf"
+      "bytes": 8035,
+      "sha256": "abf165857c1d7508db56b98f16cc632de391102dcfa6113c53db82b447949778"
     },
     {
       "path": "src/renderer/src/components/ThemePalette.tsx",
@@ -825,6 +835,11 @@
       "path": "src/renderer/src/components/UnderwaterBackground.tsx",
       "bytes": 7481,
       "sha256": "09d850bf5a66ec0a7c341f15c1349a5d0641dce6d491278227a544c892e3b578"
+    },
+    {
+      "path": "src/renderer/src/components/UpdateGuide.tsx",
+      "bytes": 1262,
+      "sha256": "dd44f856c01599b64ce5729e6552a135a7ad172975bc323ca57de2b736db5db3"
     },
     {
       "path": "src/renderer/src/env.d.ts",
@@ -998,8 +1013,8 @@
     },
     {
       "path": "src/renderer/src/pages/Settings.tsx",
-      "bytes": 6198,
-      "sha256": "85347b7435ec34d16696a72b78a9e84c0fce69bffcd7a3c8392c593d28955260"
+      "bytes": 6629,
+      "sha256": "cad1165875cda7f859ee7eb03beebf3e09e993afb68077a20b12c458f07aaef0"
     },
     {
       "path": "src/renderer/src/pages/Stats.tsx",
@@ -1038,8 +1053,8 @@
     },
     {
       "path": "src/renderer/src/store/music.ts",
-      "bytes": 2841,
-      "sha256": "90996053714bfc5aa993a9a36c0ae1d6fa15e6265cf85440348199a4e49de188"
+      "bytes": 7738,
+      "sha256": "50ab1be30297eb3a3d9544a6f854efd4c1fa0f88eaf86458123037ba6dda6d27"
     },
     {
       "path": "src/renderer/src/styles/backup-settings.css",
@@ -1158,8 +1173,8 @@
     },
     {
       "path": "src/renderer/src/styles/music-panel.css",
-      "bytes": 15201,
-      "sha256": "b5d4a0a3550041de21cbcd1d2a32a568e259d8c4551e3d672a793144b5059294"
+      "bytes": 18704,
+      "sha256": "91b4654907884bf97c9f04090d1a79abb765b8cd50bad1398b9694b6571219cd"
     },
     {
       "path": "src/renderer/src/styles/p3r-refresh.css",
@@ -1273,8 +1288,8 @@
     },
     {
       "path": "src/shared/backupDatabase.ts",
-      "bytes": 21845,
-      "sha256": "ac6773d2619dbcf7e92487494b6e73af8f35448ff9b2556245e4e773ec94c035"
+      "bytes": 22106,
+      "sha256": "08cad4d5bbadcdd0cd2c0f360abe444d92f589d280373d4b44e57f7b3419401a"
     },
     {
       "path": "src/shared/calendarGroups.ts",
@@ -1412,6 +1427,11 @@
       "sha256": "54d6c000bc131627d586dcfd9101d39d5d1a0c5dde0552f1c6e3a1dbfd5a3b51"
     },
     {
+      "path": "src/shared/musicLibrary.ts",
+      "bytes": 413,
+      "sha256": "f444e0892707be25e7d384a74dc2a7ba2f97bbcc8214214f4e45d13a83658ce3"
+    },
+    {
       "path": "src/shared/netease.ts",
       "bytes": 5853,
       "sha256": "cffee2dccf0f14b8f6f48d792161a1b2b5cd6f5b602f7e4476da538686bb8795"
@@ -1438,13 +1458,13 @@
     },
     {
       "path": "src/shared/personalRelease.ts",
-      "bytes": 2935,
-      "sha256": "1a2c2ba2c6b4ff9a2cf9f6d59a65e822f8712524cfb9e41851bea32d23b0f088"
+      "bytes": 3655,
+      "sha256": "c66cef4b4bcfa0e907cb2a794b9bfe0373c2c99102926ad712b5a68b386a3b57"
     },
     {
       "path": "src/shared/personalReleaseHistory.ts",
-      "bytes": 3496,
-      "sha256": "b36ee0148daaded22f367a48c35571d4c9926e4514c6c208f4c029074cce97c9"
+      "bytes": 4055,
+      "sha256": "5d3c060fadac769b28bba5e0e8d2b6a7ebae435ff1a90402bea33bb09b2131d7"
     },
     {
       "path": "src/shared/privacyErasure.ts",
@@ -1512,5 +1532,5 @@
       "sha256": "5941d0d0aa6647ee5d43aa239f9897a8db32c545e0deb7164f8f8ed9e28c4cdf"
     }
   ],
-  "fileCount": 299
+  "fileCount": 303
 }

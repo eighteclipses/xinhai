@@ -10,7 +10,7 @@ import { createBackupController } from '../shared/backupController'
 import type { PreparedBackup } from '../shared/backupArchiveTypes'
 import type { ModelClient, ModelStatus, ModelReply } from '../shared/modelConfig'
 import { scoreJournal, testLLMConnection } from '../main/scoring'
-import { listImportedMusic, importMusicFiles, removeImportedMusic } from './music'
+import { listImportedMusic, importMusicFiles, removeImportedMusic, undoRemoveImportedMusic, musicStorageInfo, openMusicFolder, importMusicFolder } from './music'
 import { native, request } from './native'
 import type { XinhaiApi } from '../preload'
 import type { KnowledgeNote, KnowledgeVault, Settings } from '../shared/types'
@@ -108,7 +108,8 @@ export function installMobileApi(){
     knowledgeList:async()=>native<KnowledgeVault>('knowledgeList'),knowledgeSave:async(note)=>native<KnowledgeNote>('knowledgeSave',note),knowledgeCreate:async(title,initialContent,expectedRoot)=>native<KnowledgeNote>('knowledgeCreate',{title,initialContent,expectedRoot}),
     knowledgeRename:async(input)=>native<KnowledgeNote>('knowledgeRename',input),knowledgeDelete:async(input)=>native<void>('knowledgeDelete',input),
     knowledgeChoose:async()=>request<KnowledgeVault|null>('knowledgeChoose'),knowledgeFolder:async()=>native<string>('knowledgeFolder'),knowledgeObsidian:async()=>native<void>('knowledgeObsidian'),
-    musicList:async()=>listImportedMusic(),musicImport:async()=>importMusicFiles(),musicRemove:async(id)=>removeImportedMusic(id),
+    musicList:async()=>listImportedMusic(),musicImport:async()=>importMusicFiles(),musicRemove:async(id)=>removeImportedMusic(id),musicUndoRemove:async(id)=>undoRemoveImportedMusic(id),
+    musicStorageInfo:async()=>musicStorageInfo(),musicOpenFolder:()=>openMusicFolder(),musicImportFolder:()=>importMusicFolder(),
     backgroundImport:async()=>{if(db.getState().settings.wallpaperLibrary.length>=100)throw Error('壁纸收藏已达到 100 张，请先移除不需要的收藏');const custom=await request<Settings['customBackground']>('backgroundImport');return custom?themes.addWallpaper(custom):null},
     backgroundSelect:async id=>themes.selectWallpaper(id),backgroundRename:async(id,name)=>themes.renameWallpaper(id,name),backgroundRemove:async id=>themes.removeWallpaper(id),
     themeSave:async name=>themes.saveTheme(name),themeApply:async id=>themes.applyTheme(id),themeRename:async(id,name)=>themes.renameTheme(id,name),themeRemove:async id=>themes.removeTheme(id),

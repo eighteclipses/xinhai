@@ -50,6 +50,17 @@ public class MainActivity extends Activity {
     private final Map<String,Uri> noteUris=new HashMap<>();
     private final Map<String,String> noteParents=new HashMap<>();
     private int skippedNotes=0;
+    private volatile MusicRemoveReceipt musicRemoveReceipt;
+
+    private static final class MusicRemoveReceipt {
+        final String id,path,title,legacyEntry,afterSignature;
+        final long createdAt;
+        final int legacyIndex;
+        final boolean legacy;
+        MusicRemoveReceipt(String id,String path,String title,long createdAt,String legacyEntry,int legacyIndex,boolean legacy,String afterSignature){
+            this.id=id;this.path=path;this.title=title;this.createdAt=createdAt;this.legacyEntry=legacyEntry;this.legacyIndex=legacyIndex;this.legacy=legacy;this.afterSignature=afterSignature;
+        }
+    }
 
     @Override public void onCreate(Bundle state){
         super.onCreate(state);
@@ -183,13 +194,14 @@ public class MainActivity extends Activity {
             case "privacyCancel":privacyErase.cancel();return null;
             case "sqlExec":
                 if(BuildConfig.COMMERCIAL_EDITION)SqlBridgePolicy.validate("exec",args.getString("sql"));
-                for(String sql:args.getString("sql").split(";"))if(!sql.trim().isEmpty())database.execSQL(sql);return null;
+                for(String sql:args.getString("sql").split(";"))if(!sql.trim().isEmpty()){database.execSQL(sql);invalidateMusicUndoForSql(sql);}return null;
             case "sqlBegin":database.beginTransaction();return null;
             case "sqlEnd":if(args.getBoolean("success"))database.setTransactionSuccessful();database.endTransaction();return null;
             case "sqlRun":return sqlRun(args);
             case "sqlQuery":return sqlQuery(args);
             case "musicList":return musicList();
             case "musicRemove":return removeMusic(args.getString("id"));
+            case "musicUndoRemove":return undoRemoveMusic(args.getString("id"));
             case "knowledgeList":return knowledgeList();
             case "knowledgeSave":return knowledgeSave(args);
             case "knowledgeCreate":return knowledgeCreate(args.getString("title"),args.has("initialContent")&&!args.isNull("initialContent")?args.getString("initialContent"):null,args.has("expectedRoot")&&!args.isNull("expectedRoot")?args.getString("expectedRoot"):null);
@@ -229,9 +241,18 @@ public class MainActivity extends Activity {
         if(BuildConfig.COMMERCIAL_EDITION)SqlBridgePolicy.validate("run",args.getString("sql"));
         JSONObject safeArgs=protectSettingsMutation(args);
         try(SQLiteStatement st=statement(safeArgs)){
-            if(args.getString("sql").trim().toUpperCase(Locale.ROOT).startsWith("INSERT")){long id=st.executeInsert();return new JSONObject().put("changes",id<0?0:1).put("lastInsertRowid",Math.max(0,id));}
-            int changed=st.executeUpdateDelete();return new JSONObject().put("changes",changed).put("lastInsertRowid",0);
+            if(args.getString("sql").trim().toUpperCase(Locale.ROOT).startsWith("INSERT")){long id=st.executeInsert();invalidateMusicUndoForSql(args.getString("sql"));return new JSONObject().put("changes",id<0?0:1).put("lastInsertRowid",Math.max(0,id));}
+            int changed=st.executeUpdateDelete();invalidateMusicUndoForSql(args.getString("sql"));return new JSONObject().put("changes",changed).put("lastInsertRowid",0);
         }
+    }
+
+    private void invalidateMusicUndoForSql(String sql){
+        if(musicRemoveReceipt==null)return;
+        // Restore/sync SQL may replace the same rows, so signatures alone cannot
+        // detect that ABA case. Only discard this Activity's in-memory receipt;
+        // the SQL, backup data and unrelated learning writes stay unchanged.
+        String normalized=sql.replaceFirst("(?s)^\\s*(?:(?:/\\*.*?\\*/|--[^\\r\\n]*(?:\\r?\\n|$))\\s*)+","").replace('"',' ').replace('`',' ').replace('[',' ').replace(']',' ');
+        if(normalized.matches("(?is)\\s*(?:INSERT(?:\\s+OR\\s+\\w+)?\\s+INTO|REPLACE\\s+INTO|UPDATE(?:\\s+OR\\s+\\w+)?|DELETE\\s+FROM|DROP\\s+TABLE(?:\\s+IF\\s+EXISTS)?|ALTER\\s+TABLE)\\s+(?:main\\s*\\.\\s*)?music_imports(?=\\s|\\(|;|$).*"))musicRemoveReceipt=null;
     }
 
     private void submitWork(Runnable action){
@@ -401,7 +422,7 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode,resultCode,data);if(requestCode!=801||pendingId==null)return;
         String id=pendingId,method=pendingMethod;JSONObject args=pendingArgs;pendingId=null;pendingMethod=null;pendingArgs=null;
         submitWork(()->{try{
-            if(resultCode!=RESULT_OK||data==null){reply(id,ok("musicImport".equals(method)?new JSONObject().put("added",0).put("skipped",0).put("tracks",musicList()):null));return;}
+            if(resultCode!=RESULT_OK||data==null){reply(id,ok("musicImport".equals(method)?new JSONObject().put("added",0).put("skipped",0).put("duplicates",0).put("failed",0).put("tracks",musicList()).put("cancelled",true):null));return;}
             Uri uri=data.getData();Object result;
             if("knowledgeChoose".equals(method)){
                 if(uri==null)throw new IOException("未选择文件夹");
@@ -481,30 +502,103 @@ public class MainActivity extends Activity {
     }
     private synchronized JSONArray removeMusic(String id)throws Exception{
         if(!resourceMigrationReady()){
-            JSONArray rows=new JSONArray(preferences.getString("music","[]")),next=new JSONArray();for(int i=0;i<rows.length();i++)if(!rows.getJSONObject(i).getString("id").equals(id))next.put(rows.get(i));if(!preferences.edit().putString("music",next.toString()).commit())throw new IOException("保存音乐列表失败");return next;
+            String previous=preferences.getString("music","[]");JSONArray rows=new JSONArray(previous),next=new JSONArray();JSONObject removed=null;int index=-1;
+            for(int i=0;i<rows.length();i++){
+                JSONObject row=rows.getJSONObject(i);
+                if(row.getString("id").equals(id)){if(removed!=null)throw new IOException("音乐列表含重复条目，暂不能安全移出");removed=row;index=i;}
+                else next.put(row);
+            }
+            if(removed==null)return musicList();
+            File file=legacyMusicFile(removed.getString("file"),id);
+            MusicRemoveReceipt receipt=new MusicRemoveReceipt(id,file.getCanonicalPath(),removed.optString("title",file.getName()),0,removed.toString(),index,true,musicSignature(true,next.toString()));
+            saveLegacyMusic(next.toString(),previous);
+            musicRemoveReceipt=receipt;
+            return musicList();
         }
-        database.beginTransaction();try{database.delete("music_imports","id=?",new String[]{id});database.setTransactionSuccessful();}finally{database.endTransaction();}return musicList();
+        if(database.inTransaction())throw new IOException("正在写入音乐资料，请完成后再移出歌曲");
+        MusicRemoveReceipt receipt;JSONArray result;
+        database.beginTransaction();
+        try{
+            String path,title;long createdAt;
+            try(Cursor c=database.rawQuery("SELECT path,title,createdAt FROM music_imports WHERE id=?",new String[]{id})){
+                if(!c.moveToFirst())return musicList();path=c.getString(0);title=c.getString(1);createdAt=c.getLong(2);
+            }
+            if(database.delete("music_imports","id=?",new String[]{id})!=1)throw new IOException("移出音乐记录失败");
+            receipt=new MusicRemoveReceipt(id,path,title,createdAt,null,-1,false,musicSignature(false,null));
+            result=musicList();database.setTransactionSuccessful();
+        }finally{database.endTransaction();}
+        musicRemoveReceipt=receipt;
+        return result;
+    }
+    private String musicSignature(boolean legacy,String raw)throws Exception{
+        String value;
+        if(legacy)value=new JSONArray(raw==null?preferences.getString("music","[]"):raw).toString();
+        else{
+            JSONArray rows=new JSONArray();
+            try(Cursor c=database.rawQuery("SELECT id,path,title,createdAt FROM music_imports ORDER BY createdAt,id",null)){
+                while(c.moveToNext())rows.put(new JSONArray().put(c.getString(0)).put(c.getString(1)).put(c.getString(2)).put(c.getLong(3)));
+            }
+            value=rows.toString();
+        }
+        byte[] digest=MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));StringBuilder hex=new StringBuilder();
+        for(byte b:digest)hex.append(String.format(Locale.ROOT,"%02x",b&255));return (legacy?"legacy:":"database:")+hex;
+    }
+    private void saveLegacyMusic(String next,String previous)throws IOException{
+        if(!preferences.edit().putString("music",next).commit()){
+            // SharedPreferences may update memory even when disk commit fails.
+            // Put the previous list back before reporting failure; never create
+            // or consume an undo receipt for an unsuccessful write.
+            preferences.edit().putString("music",previous).commit();
+            throw new IOException("保存音乐列表失败");
+        }
+    }
+    private synchronized JSONArray undoRemoveMusic(String id)throws Exception{
+        MusicRemoveReceipt receipt=musicRemoveReceipt;
+        if(receipt==null||!receipt.id.equals(id))throw new IOException("只能撤销本次打开应用后最近移出的歌曲");
+        if(receipt.legacy==resourceMigrationReady())throw new IOException("音乐库已变化，不能撤销上次移出");
+        if(receipt.legacy){
+            String current=preferences.getString("music","[]");
+            if(!receipt.afterSignature.equals(musicSignature(true,current)))throw new IOException("音乐库已变化，不能撤销上次移出");
+            JSONObject original=new JSONObject(receipt.legacyEntry);File file=legacyMusicFile(original.getString("file"),receipt.id);
+            if(!file.isFile()||!file.canRead())throw new IOException("保留的音乐副本已不在本机，不能撤销");
+            JSONArray rows=new JSONArray(current),next=new JSONArray();
+            if(receipt.legacyIndex<0||receipt.legacyIndex>rows.length())throw new IOException("原音乐排序已变化，不能撤销");
+            for(int i=0;i<=rows.length();i++){if(i==receipt.legacyIndex)next.put(original);if(i<rows.length())next.put(rows.get(i));}
+            saveLegacyMusic(next.toString(),current);musicRemoveReceipt=null;return musicList();
+        }
+        if(database.inTransaction())throw new IOException("正在写入音乐资料，请完成后再撤销");
+        JSONArray result;database.beginTransaction();
+        try{
+            if(!receipt.afterSignature.equals(musicSignature(false,null)))throw new IOException("音乐库已变化，不能撤销上次移出");
+            File file=safeMusicFile(receipt.path,receipt.id);
+            if(file==null||!file.isFile()||!file.canRead())throw new IOException("保留的音乐副本已不在本机，不能撤销");
+            ContentValues values=new ContentValues();values.put("id",receipt.id);values.put("path",receipt.path);values.put("title",receipt.title);values.put("createdAt",receipt.createdAt);
+            database.insertOrThrow("music_imports",null,values);result=musicList();database.setTransactionSuccessful();
+        }finally{database.endTransaction();}
+        musicRemoveReceipt=null;return result;
     }
     private synchronized JSONObject importMusic(List<Uri> uris)throws Exception{
         if(!resourceMigrationReady()){
-            JSONArray list=new JSONArray(preferences.getString("music","[]"));int added=0,skipped=0;
-            for(Uri uri:uris){try{File file=copyImport(uri,"music",MUSIC_EXTENSIONS,512L*1024*1024);String id=file.getName().split("\\.")[0];boolean duplicate=false;for(int i=0;i<list.length();i++)if(list.getJSONObject(i).getString("id").equals(id))duplicate=true;if(duplicate){skipped++;continue;}list.put(new JSONObject().put("id",id).put("file",ORIGIN+"/local/music/"+file.getName()).put("title",displayName(uri)).put("tag","local"));added++;}catch(Exception e){skipped++;}}
-            if(!preferences.edit().putString("music",list.toString()).commit())throw new IOException("保存音乐列表失败");return new JSONObject().put("added",added).put("skipped",skipped).put("tracks",list);
+            String previous=preferences.getString("music","[]");JSONArray list=new JSONArray(previous);int added=0,duplicates=0,failed=0;
+            for(Uri uri:uris){try{File file=copyImport(uri,"music",MUSIC_EXTENSIONS,512L*1024*1024);String id=file.getName().split("\\.")[0];boolean duplicate=false;for(int i=0;i<list.length();i++)if(list.getJSONObject(i).getString("id").equals(id))duplicate=true;if(duplicate){duplicates++;continue;}list.put(new JSONObject().put("id",id).put("file",ORIGIN+"/local/music/"+file.getName()).put("title",displayName(uri)).put("tag","local"));added++;}catch(Exception e){failed++;}}
+            saveLegacyMusic(list.toString(),previous);if(added>0)musicRemoveReceipt=null;
+            return new JSONObject().put("added",added).put("skipped",duplicates+failed).put("duplicates",duplicates).put("failed",failed).put("tracks",musicList());
         }
-        int added=0,skipped=0;ArrayList<CopiedFile> pendingFiles=new ArrayList<>();ArrayList<JSONObject> pendingRows=new ArrayList<>();HashSet<String> pendingIds=new HashSet<>();
+        int added=0,duplicates=0,failed=0;ArrayList<CopiedFile> pendingFiles=new ArrayList<>();ArrayList<JSONObject> pendingRows=new ArrayList<>();HashSet<String> pendingIds=new HashSet<>();
         for(Uri uri:uris){try{
             CopiedFile copied=copyImportTracked(uri,"music",MUSIC_EXTENSIONS,512L*1024*1024);String id=copied.file.getName().split("\\.")[0];boolean duplicate=false;try(Cursor c=database.rawQuery("SELECT 1 FROM music_imports WHERE id=?",new String[]{id})){duplicate=c.moveToFirst();}
-            if(duplicate){skipped++;continue;}
-            if(!pendingIds.add(id)){skipped++;continue;}
+            if(duplicate){duplicates++;continue;}
+            if(!pendingIds.add(id)){duplicates++;continue;}
             pendingFiles.add(copied);pendingRows.add(new JSONObject().put("id",id).put("path",copied.file.getCanonicalPath()).put("title",displayName(uri)).put("createdAt",System.currentTimeMillis()));
-        }catch(Exception e){skipped++;}}
+        }catch(Exception e){failed++;}}
         try{
             database.beginTransaction();
-            for(JSONObject row:pendingRows){ContentValues values=new ContentValues();values.put("id",row.getString("id"));values.put("path",row.getString("path"));values.put("title",row.getString("title"));values.put("createdAt",row.getLong("createdAt"));long inserted=database.insertWithOnConflict("music_imports",null,values,SQLiteDatabase.CONFLICT_IGNORE);if(inserted<0)throw new IOException("保存音乐记录失败");if(inserted==0){skipped++;continue;}added++;}
+            for(JSONObject row:pendingRows){ContentValues values=new ContentValues();values.put("id",row.getString("id"));values.put("path",row.getString("path"));values.put("title",row.getString("title"));values.put("createdAt",row.getLong("createdAt"));long inserted=database.insertWithOnConflict("music_imports",null,values,SQLiteDatabase.CONFLICT_IGNORE);if(inserted<0){boolean duplicate;try(Cursor c=database.rawQuery("SELECT 1 FROM music_imports WHERE id=?",new String[]{row.getString("id")})){duplicate=c.moveToFirst();}if(duplicate){duplicates++;continue;}throw new IOException("保存音乐记录失败");}added++;}
             database.setTransactionSuccessful();
         }catch(Exception e){for(CopiedFile copied:pendingFiles)if(copied.created)copied.file.delete();throw e;
         }finally{if(database.inTransaction())database.endTransaction();}
-        return new JSONObject().put("added",added).put("skipped",skipped).put("tracks",musicList());
+        if(added>0)musicRemoveReceipt=null;
+        return new JSONObject().put("added",added).put("skipped",duplicates+failed).put("duplicates",duplicates).put("failed",failed).put("tracks",musicList());
     }
 
     private File knowledgeDir()throws IOException{

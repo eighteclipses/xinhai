@@ -18,7 +18,7 @@ const entries: { group: string; title: string; detail: string; keywords: string;
   { group: '其他页面', title: '00 · 桌面布局', detail: '去共学桌面，点顶部小铅笔拖动、缩放或恢复默认', keywords: '首页 布局 排版 模块 大小 自由 调整', page: 'home', target: 'home-layout-edit' },
   { group: '其他页面', title: '08 · 学习分类', detail: '去成长轨迹，新增科目、改名/颜色、排序、停用或恢复', keywords: '自定义 学科 项目 目标 分类 管理 统计', page: 'history', target: 'history-categories' },
   { group: '其他页面', title: '09 · 专注与音符', detail: '去系统设置，调整后台到时行为、音符演出与提醒权限', keywords: '计时 集中 结算 25 分钟 累计 后台 等待 继续 通知 闹钟 提醒', page: 'settings', target: 'settings-focus' },
-  { group: '其他页面', title: '09 · 声音与体验', detail: '去系统设置，调整角色语音、自动播放与提示音量', keywords: '语音 冷却 间隔 音效 声音 静音 音乐', page: 'settings', target: 'settings-sound' }
+  { group: '其他页面', title: '09 · 声音与体验', detail: '语音、音量、自动播放；添加音乐、移除歌曲与存放位置', keywords: '语音 冷却 间隔 音效 声音 静音 音乐 添加 删除 移除 导入 文件夹 歌曲 音乐库 隐藏 恢复', page: 'settings', target: 'settings-sound' }
 ]
 
 export default function CustomizationIndex() {

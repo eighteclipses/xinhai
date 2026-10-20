@@ -1,5 +1,6 @@
 import Toggle from '../components/Toggle'
 import FocusSettings from '../components/FocusSettings'
+import UpdateGuide from '../components/UpdateGuide'
 import { openStartupAnnouncement } from '../components/StartupAnnouncement'
 import { COMMERCIAL_EDITION } from '../../../shared/edition'
 import credits from '../../../shared/credits.json'
@@ -46,9 +47,12 @@ export default function Settings() {
             <p className="scene-hint">作者寄语、版本记录、素材鸣谢，以及自愿支持入口。</p>
             <button className="btn" onClick={openStartupAnnouncement}>查看更新公告</button>
           </div>}
+          {!COMMERCIAL_EDITION && <UpdateGuide />}
           <div className="glass" id="settings-sound" tabIndex={-1} style={{ padding: '22px 26px' }}>
             <div style={{ fontSize: 14, letterSpacing: '0.3em', color: 'var(--cyan)', marginBottom: 8 }}>声音与体验</div>
             <p className="scene-hint">背景、日期、随身听和演出预览已移到自定义。</p><button className="btn" onClick={()=>useApp.getState().go('customize')}>打开自定义 ↗</button>
+            <p className="scene-hint">添加自己的歌曲、移出歌单、恢复内置歌曲，或查看音乐存放位置，都在音乐管理中。</p>
+            <button className="btn" onClick={()=>window.dispatchEvent(new Event('xinhai-open-music-library'))}>管理音乐 · 添加 / 移除 / 存放位置 ↗</button>
             {!COMMERCIAL_EDITION&&<Toggle on={settings.voiceEnabled} onChange={(v) => setSettings({ voiceEnabled: v })} label="角色语音" desc="结城理战斗语音，随场景触发" />}
             <Toggle on={settings.autoPlayMusic} onChange={(v) => setSettings({ autoPlayMusic: v })} label="打开应用自动播放音乐" />
             <p className="scene-hint">专注到时使用系统提醒音，受系统音量、通知权限和免打扰设置控制；应用内提醒会保留到确认。</p>

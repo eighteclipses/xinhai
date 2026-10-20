@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { authorMessage, releaseNotes } from '../../../shared/announcementContent'
 import { PERSONAL_RELEASE_DATE, PERSONAL_RELEASE_VERSION, PERSONAL_RELEASE_CHANGES, PERSONAL_RELEASE_SUMMARY } from '../../../shared/personalRelease'
 import { personalReleaseHistory } from '../../../shared/personalReleaseHistory'
+import { goToSetting } from '../lib/settingNavigation'
 import credits from '../../../shared/credits.json'
 import '../styles/startup-announcement.css'
 
@@ -72,6 +73,7 @@ export default function StartupAnnouncement() {
         <div className="announcement-latest"><span>这次更新 · {PERSONAL_RELEASE_VERSION}</span><ul>
           {PERSONAL_RELEASE_CHANGES.map(change => <li key={change}>{change}</li>)}
         </ul></div>
+        <button type="button" className="announcement-text-button" onClick={() => { close(); goToSetting('settings', 'settings-update-guide') }}>电脑如何更新？查看安装版与便携版步骤 ↗</button>
         <p className="announcement-signature">—— 心海共学的作者</p>
       </div>}
       {section === 'history' && <section><h2>一点一点，走到现在</h2>

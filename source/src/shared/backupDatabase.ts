@@ -78,6 +78,7 @@ export function validateBackupClientState(value:unknown):Record<string,string> {
       if(!text(d.content)||!text(d.revision))fail('笔记草稿损坏')
     }else if(key==='xinhai-music-prefs'){
       if(d.mode!==undefined&&!['seq','loop','random'].includes(d.mode as string)||d.volume!==undefined&&!finite(d.volume,0,1)||d.file!==undefined&&!text(d.file))fail('音乐偏好损坏')
+      if(d.hiddenBuiltinFiles!==undefined&&(!Array.isArray(d.hiddenBuiltinFiles)||d.hiddenBuiltinFiles.length>1000||d.hiddenBuiltinFiles.some(file=>typeof file!=='string'||!file||file.length>1024||/[\u0000-\u001f]/.test(file))))fail('隐藏音乐偏好损坏')
     }else if(key==='xinhai-music-resume'){
       if(!text(d.file)||!finite(d.seconds)||typeof d.playing!=='boolean')fail('音乐进度损坏')
     }

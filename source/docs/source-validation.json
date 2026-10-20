@@ -1,15 +1,26 @@
 {
-  "snapshot": "0.2.34-source.0",
+  "snapshot": "0.2.35-source.0",
   "date": "2026-10-20",
-  "originCommit": "9170e98408448ac555d401fc59e1e66c5716a146",
+  "originCommit": "38bd954cf85768518339bc03ce21d95db88ee1df",
   "performedThisPatch": {
     "typecheck": true,
     "desktopBuild": true,
     "mobileWebBuild": true,
+    "musicStore": {
+      "ok": true,
+      "checks": 8
+    },
+    "musicBackend": {
+      "ok": true,
+      "checks": 12,
+      "scope": "real Electron/native SQLite and generated PCM WAVs on independent synthetic profiles"
+    },
     "sourceUi": {
       "ok": true,
-      "checks": 8,
-      "smallViewport": true
+      "checks": 11,
+      "scope": "actual compiled public main/preload/renderer and native SQLite on an independent E profile; deterministic substitutes only for OS file-picker results and shell.openPath; no user library, real OS dialog/Explorer, APK/device, codec playback or audible acceptance; source bundled manifest remains empty",
+      "filePickerSubstitute": true,
+      "shellOpenSubstitute": true
     },
     "sourceScopeAndManifest": true,
     "physicalTablet": false,
@@ -23,10 +34,13 @@
     "coreSourceUnchanged": [
       "src/main/db.ts",
       "src/shared/focusRewards.ts",
-      "src/shared/backupDatabase.ts",
       "src/shared/lanSyncEngine.ts",
       "src/shared/focusRecovery.ts"
-    ]
+    ],
+    "previousUi": {
+      "snapshot": "0.2.34-source.0",
+      "publicCommit": "005837c51649504b71138ecf378c65da5db6fe6d"
+    }
   },
   "authorOriginal": {
     "unchanged": true,
@@ -34,15 +48,20 @@
     "sha256": "a958c43c3b425650ae834d922845e0d2c70b69f41f05e598c9f4479e2ebb3ba0"
   },
   "toolchain": {
-    "dependenciesReused": true,
+    "officialLockInstall": "npm ci --ignore-scripts --offline with official-registry lock and verified cache",
+    "packageCount": 523,
     "electron": "33.4.11",
-    "betterSqlite3": "11.10.0"
+    "betterSqlite3": "11.10.0",
+    "nativeRuntimeReused": true,
+    "rootDependenciesModified": false
   },
   "notVerified": [
     "physical tablet",
     "source APK/installer installation",
-    "natural-duration audible reminders",
+    "real operating-system file picker or Explorer",
+    "audio decoding or audible playback",
     "fresh native dependency installation",
-    "complete dependency/security audit"
+    "complete dependency/security audit",
+    "file symlink creation unavailable: EPERM"
   ]
 }

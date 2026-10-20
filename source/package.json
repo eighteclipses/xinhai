@@ -1,6 +1,6 @@
 {
   "name": "xinhai-source",
-  "version": "0.2.34-source.0",
+  "version": "0.2.35-source.0",
   "description": "心海共学个人版源码快照 · 非商业用途",
   "main": "./out/main/index.js",
   "author": "eighteclipses",
@@ -19,7 +19,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node scripts/test.cjs",
     "check:source": "node scripts/check-source.cjs",
-    "test:native": "node scripts/check-focus-rewards.cjs"
+    "test:native": "node scripts/check-focus-rewards.cjs",
+    "test:music": "node scripts/check-music-management-store.cjs && node scripts/check-music-management.cjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",

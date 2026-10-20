@@ -15,7 +15,7 @@ import { createModelService } from './modelService'
 import { createPersonalClientStateStore } from './personalClientState'
 import { createErasureRequest, finishPendingErasure } from './privacyErasure'
 import { exportArchive, prepareArchive, finishArchive, verifyArchive } from './backupFiles'
-import { listImportedMusic, importMusicFiles, removeImportedMusic } from './music'
+import { listImportedMusic, importMusicFiles, removeImportedMusic, importMusicFolder, musicFolder, musicStorageInfo, undoMusicRemoval, clearMusicUndo } from './music'
 import { listReviews, saveReview, rateReview, archiveReview } from './review'
 import { knowledgeRoot, selectKnowledgeRoot, listKnowledge, saveKnowledge, createKnowledge, renameKnowledge, deleteKnowledge, setKnowledgeCategory } from './knowledge'
 import * as learningCategories from './learningCategories'
@@ -195,7 +195,7 @@ else app.whenReady().then(async () => {
     finish:finishArchive,verify:verifyArchive,
     hasActiveFocus:()=>!!loadFocusRecovery().record,
     pauseSync:async()=>{const enabled=lanSync.status().enabled;lanSync.stop();return async()=>{await lanSync.enable(enabled)}},
-    replace:(snapshot,prepared)=>restoreBackupState(snapshot,prepared.resources),
+    replace:(snapshot,prepared)=>{restoreBackupState(snapshot,prepared.resources);clearMusicUndo()},
     resetSync:()=>{lanSync.stop();lanSync=createLanSyncServer(syncEngine,changed)}
   })
   if(clientState){
@@ -284,10 +284,22 @@ else app.whenReady().then(async () => {
   applicationIpc.handle('music:clear-online-data',()=>neteaseLogout())
   applicationIpc.handle('music:list' ,()=>listImportedMusic())
   applicationIpc.handle('music:remove',(_e,id:string)=>removeImportedMusic(id))
+  applicationIpc.handle('music:undo-remove',(_e,id:string)=>undoMusicRemoval(id))
+  applicationIpc.handle('music:storage-info',()=>musicStorageInfo())
+  applicationIpc.handle('music:open-folder',async()=>{
+    const folder=musicFolder();mkdirSync(folder,{recursive:true})
+    const error=await shell.openPath(folder)
+    if(error)throw Error('无法打开音乐文件夹，请稍后重试。')
+  })
+  applicationIpc.handle('music:import-folder',async()=>{
+    if(!mainWindow)return {added:0,skipped:0,tracks:listImportedMusic(),cancelled:true}
+    const result=await dialog.showOpenDialog(mainWindow,{title:'选择音乐文件夹（仅添加这一层的音频）',properties:['openDirectory']})
+    return result.canceled?{added:0,skipped:0,tracks:listImportedMusic(),cancelled:true}:importMusicFolder(result.filePaths[0])
+  })
   applicationIpc.handle('music:import',async()=>{
-    if(!mainWindow)return {added:0,skipped:0,tracks:listImportedMusic()}
+    if(!mainWindow)return {added:0,skipped:0,tracks:listImportedMusic(),cancelled:true}
     const result=await dialog.showOpenDialog(mainWindow,{title:'导入本地音乐',properties:['openFile','multiSelections'],filters:[{name:'音频文件',extensions:['mp3','ogg','wav','flac','m4a','aac','opus']}]})
-    return result.canceled?{added:0,skipped:0,tracks:listImportedMusic()}:importMusicFiles(result.filePaths)
+    return result.canceled?{added:0,skipped:0,tracks:listImportedMusic(),cancelled:true}:importMusicFiles(result.filePaths)
   })
   applicationIpc.handle('review:list', () => listReviews())
   applicationIpc.handle('review:save', (_e, input) => saveReview(input))

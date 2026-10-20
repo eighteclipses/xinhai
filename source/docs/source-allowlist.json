@@ -1,7 +1,7 @@
 {
-  "snapshot": "0.2.34-source.0",
-  "originCommit": "9170e98408448ac555d401fc59e1e66c5716a146",
-  "basePublicCommit": "c88657efc6a1ae5b89689c21f1c005a88a73e7d1",
+  "snapshot": "0.2.35-source.0",
+  "originCommit": "38bd954cf85768518339bc03ce21d95db88ee1df",
+  "basePublicCommit": "005837c51649504b71138ecf378c65da5db6fe6d",
   "textNormalization": "UTF-8 LF and a single EOF newline; original LICENSE/NOTICE bytes preserved",
   "frozenInputs": [
     {
@@ -62,7 +62,7 @@
     },
     {
       "path": "src/main/music.ts",
-      "mode": "frozen-code"
+      "mode": "public-source-adaptation"
     },
     {
       "path": "src/main/netease.ts",
@@ -967,6 +967,14 @@
     {
       "path": "src/shared/personalReleaseHistory.ts",
       "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/musicLibrary.ts",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/renderer/src/components/UpdateGuide.tsx",
+      "mode": "public-source-adaptation"
     }
   ],
   "additionalPublishedInputs": [
@@ -1012,6 +1020,8 @@
     "scripts/check-focus-rewards.cjs",
     "scripts/check-llm-endpoint.cjs",
     "scripts/check-local-scoring.cjs",
+    "scripts/check-music-management-store.cjs",
+    "scripts/check-music-management.cjs",
     "scripts/check-scene-motion.cjs",
     "scripts/check-share-parser.cjs",
     "scripts/check-snapshot-security.cjs",

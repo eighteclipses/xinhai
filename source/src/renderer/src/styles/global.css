@@ -67,10 +67,14 @@ body::after {
 }
 
 input,
-textarea {
+textarea,
+select {
   user-select: text;
   font-family: var(--font-body);
   color: var(--ink);
+  /* Native controls do not inherit body text colors. Scope their system UI
+     to our dark form surfaces without changing the wallpaper or page theme. */
+  color-scheme: dark;
   background: color-mix(in srgb,var(--theme-panel) 60%,transparent);
   border: 1px solid var(--glass-line);
   border-radius: 2px;
@@ -79,9 +83,37 @@ textarea {
   transition: border-color 0.15s;
 }
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: var(--blue);
   box-shadow: 0 0 12px color-mix(in srgb,var(--theme-color) 25%,transparent);
+}
+select {
+  cursor: pointer;
+}
+/* Native popup menus need an opaque surface: transparent options can be
+   composed against a light desktop/Android system menu instead of the glass. */
+select option,
+select optgroup {
+  background: var(--theme-panel);
+  color: var(--ink);
+}
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb,var(--ink) 70%,var(--theme-panel));
+  opacity: 1;
+}
+input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]):disabled,
+textarea:disabled,
+select:disabled {
+  color: color-mix(in srgb,var(--ink) 65%,var(--theme-panel));
+  -webkit-text-fill-color: currentColor;
+  opacity: 1;
+  cursor: not-allowed;
+}
+select option:disabled,
+select optgroup:disabled {
+  color: color-mix(in srgb,var(--ink) 65%,var(--theme-panel));
 }
 
 ::-webkit-scrollbar {

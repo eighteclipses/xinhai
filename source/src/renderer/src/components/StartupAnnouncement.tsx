@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { authorMessage, releaseNotes } from '../../../shared/announcementContent'
 import { PERSONAL_RELEASE_DATE, PERSONAL_RELEASE_VERSION, PERSONAL_RELEASE_CHANGES, PERSONAL_RELEASE_SUMMARY } from '../../../shared/personalRelease'
+import { personalReleaseHistory } from '../../../shared/personalReleaseHistory'
 import credits from '../../../shared/credits.json'
 import '../styles/startup-announcement.css'
 
@@ -77,11 +78,7 @@ export default function StartupAnnouncement() {
         <p className="announcement-muted">本次为源码快照 {PERSONAL_RELEASE_VERSION}，采用中性示例素材；完整个人版安装包另行提供。以下保留原有版本的开发历史与合并范围。</p>
         <ol className="announcement-history">
           <li><div><strong>{PERSONAL_RELEASE_VERSION}</strong><span>自用版 · 本次</span></div><p>{PERSONAL_RELEASE_SUMMARY}</p></li>
-          <li><div><strong>0.2.32</strong><span>自用版 · 本地候选</span></div><p>重新制作三幕纪念演出与周年配乐，修复笔记仅改大小写的重名误报；实体平板验收发现的后台提醒能力缺口及专注新需求继续并入0.2.33。</p></li>
-          <li><div><strong>0.2.31</strong><span>自用版</span></div><p>首页随窗口等比例放大；三位人物支持拖动与缩放；提色后继续随壁纸配色，各张壁纸独立记色，并补齐早期版本记录。</p></li>
-          <li><div><strong>0.2.30</strong><span>自用版</span></div><p>新增自定义学习分类、原版首页自由拖动与恢复默认、月行水上循环壁纸和推荐外观；修复休息轮换计时及 Android 完整备份兼容，保留旧学习记录。</p></li>
-          <li><div><strong>0.2.29</strong><span>自用版</span></div><p>新增 11 位角色、29 张立绘与两张 AI 修复背景；补齐待办、习惯和日历安排编辑，完善日记全库管理、复习分类和统计刷新。</p></li>
-          <li><div><strong>0.2.28</strong><span>自用版</span></div><p>修复壁纸长播、笔记／日记管理和到时提醒；新增日历分类汇总、按任务累计专注时长、启动公告、素材署名与自愿支持入口。</p></li>
+          {personalReleaseHistory.map(item => <li key={'personal-' + item.version}><div><strong>{item.version}</strong><span>{item.label}</span></div>{item.changes.map(change => <p key={change}>{change}</p>)}</li>)}
           {releaseNotes.map(item => <li key={item.edition + item.version}><div><strong>{item.version}</strong><span>{item.edition === 'commercial' ? '通用主题版' : item.edition === 'personal' ? '自用版' : '早期共用记录'}</span></div><p>{item.summary}</p></li>)}
         </ol>
       </section>}

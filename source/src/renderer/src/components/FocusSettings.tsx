@@ -27,14 +27,15 @@ export default function FocusSettings() {
         <option value="wait">停住等待，回来先看结算</option><option value="continue">继续休息与下一阶段</option>
       </select>
     </label>
-    <p className="scene-hint">{settings.focusBackgroundBehavior === 'wait' ? '到点停在本段结束，回到软件看完演出再继续；等待时间不计入专注。' : '按既定时长继续推进，休息不计入专注；演出留到回到软件后。异常退出仍会询问恢复方式。'}</p>
+    <p className="scene-hint">{settings.focusBackgroundBehavior === 'wait' ? '软件在后台时，倒计时结束就暂停。回到软件后再开始休息，等待的时间不算专注。' : '软件在后台时，到点自动进入休息，再按计划开始下一段专注。休息不算专注；音符动画会等你回来。异常退出后会先询问如何恢复。'}</p>
     <label style={{ display: 'flex', flexDirection: 'column', gap: 9, fontSize: 13, marginTop: 19, marginBottom: 12 }}>
       学习音符演出
       <select aria-label="学习音符演出" value={settings.focusRewardPresentation} onChange={event => void setSettings({ focusRewardPresentation: event.target.value as 'round' | 'batch' })}>
         <option value="batch">攒起来，在结束本次时集中收下</option><option value="round">每段保存后收下本段新增音符</option>
       </select>
     </label>
-    <p className="scene-hint">每累计 25 分钟有效专注获得一个学习音符，不足部分保留到下次。原有学习记录和成长不会重算。</p>
+    <p className="scene-hint">{settings.focusRewardPresentation === 'batch' ? '先把音符攒起来，结束本次专注时一起播放领取动画，也可以随时点“领取音符”。' : '每段专注结束并保存后，播放本段新增音符的领取动画。'}</p>
+    <p className="scene-hint">专注每满 25 分钟获得 1 个学习音符。不足部分会累计到下次，例如 15 分钟＋10 分钟也能获得 1 个。暂停和休息不计入。原有学习记录和成长不会重算。</p>
     <p className="scene-hint">运行时点计时面板上的小铅笔，可拖动、调整大小或恢复默认位置。</p>
     {capability?.platform === 'android' && <div style={{ borderTop: '1px solid var(--theme-line)', paddingTop: 16, marginTop: 18 }}>
       <p className="scene-hint" role="status">通知提醒：{capability.notificationsGranted ? '已开启' : '尚未开启'}<br />后台准时提醒：{capability.exactAlarmsGranted ? '已开启' : '需要允许闹钟和提醒'}</p>

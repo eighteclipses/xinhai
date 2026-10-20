@@ -1,7 +1,7 @@
 {
-  "snapshot": "0.2.33-source.0",
-  "originCommit": "53d8a837cf317b3405ff90a8a7ebc96aa4b1139c",
-  "basePublicCommit": "b66f29a3c248279298badbc830430cf0cb01fd22",
+  "snapshot": "0.2.34-source.0",
+  "originCommit": "9170e98408448ac555d401fc59e1e66c5716a146",
+  "basePublicCommit": "c88657efc6a1ae5b89689c21f1c005a88a73e7d1",
   "textNormalization": "UTF-8 LF and a single EOF newline; original LICENSE/NOTICE bytes preserved",
   "frozenInputs": [
     {
@@ -962,6 +962,10 @@
     },
     {
       "path": "tsconfig.json",
+      "mode": "frozen-code"
+    },
+    {
+      "path": "src/shared/personalReleaseHistory.ts",
       "mode": "frozen-code"
     }
   ],

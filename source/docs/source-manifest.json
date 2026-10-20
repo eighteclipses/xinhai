@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "snapshot": "0.2.33-source.0",
+  "snapshot": "0.2.34-source.0",
   "date": "2026-10-20",
-  "originCommit": "53d8a837cf317b3405ff90a8a7ebc96aa4b1139c",
+  "originCommit": "9170e98408448ac555d401fc59e1e66c5716a146",
   "excludedFromHashList": [
     "docs/source-manifest.json"
   ],
@@ -28,8 +28,8 @@
     },
     {
       "path": "BUILD.md",
-      "bytes": 3532,
-      "sha256": "a0523f79d930d7b28d26411a835af6fcb2bc9bfac7d1f606268074c97c577946"
+      "bytes": 3568,
+      "sha256": "2824308437c5da2b2db8deb6f6c352083531395f72e4f94089d861afdc85aae6"
     },
     {
       "path": "LICENSE",
@@ -43,8 +43,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5590,
-      "sha256": "1b1a2eec0743a745ee8d5648e3827aa5772ba6ac51f2e70271afc2997348e5c8"
+      "bytes": 5720,
+      "sha256": "44c641735da1b94b94aecdc6a6c3d7332f949d6df580647a3e215e1aa0220366"
     },
     {
       "path": "THIRD-PARTY-NOTICES.md",
@@ -54,7 +54,7 @@
     {
       "path": "android/app/build.gradle",
       "bytes": 1305,
-      "sha256": "d084622f994cf008b45e103a9825682576ebd2ea267801ff3bd55382d97f3c33"
+      "sha256": "4e745f606ef79a26a6a10bfb488f394bd742ea5139686b93088e87e7459a7280"
     },
     {
       "path": "android/app/src/main/AndroidManifest.xml",
@@ -208,18 +208,18 @@
     },
     {
       "path": "docs/source-allowlist.json",
-      "bytes": 26133,
-      "sha256": "d085858e3c5eef87fd18c0395c715d9f3dd4211b156af14a513fef756144f57f"
+      "bytes": 26228,
+      "sha256": "fbf8cea3a4d9ab123b61a6e30ce2b42d2df78c7314e67aca20eb343752ad5480"
     },
     {
       "path": "docs/source-validation.json",
-      "bytes": 1365,
-      "sha256": "547764a031c6503351e42830a07f9f984fd2bb5c4af24fb837b4573cc79fca2c"
+      "bytes": 1292,
+      "sha256": "550972527345e01a57aadb023d0b6f9ac6c62c12111a0a91d521369bc60eba94"
     },
     {
       "path": "docs/source-validation.md",
-      "bytes": 3654,
-      "sha256": "4195fa9c10c169a7d8b9415035d6bdf2ddc478cba06c9f80d1d391ce0639bf68"
+      "bytes": 2880,
+      "sha256": "9e9338909439dc61fe645a0ad04471e691e15b8ccb78d9e87ca5e6d119c38079"
     },
     {
       "path": "electron-builder.yml",
@@ -239,12 +239,12 @@
     {
       "path": "package-lock.json",
       "bytes": 267185,
-      "sha256": "b1b136065320d1b33e93bf20059921487133b0d585a64897a3cb20816ebfd9ca"
+      "sha256": "8c3d22efaa1d5a2236a5a803613edcd372d967f1bb403bba78813d8fb0ae6948"
     },
     {
       "path": "package.json",
       "bytes": 1800,
-      "sha256": "997557df47314b8afe94ee82cbb6d7e917146a8255f5bfa97a76c377da059bce"
+      "sha256": "4e3a05b9e578ed1888fc59a8671ef05eb8960622a7aa4df40361f3e106eb6026"
     },
     {
       "path": "resources/licenses/RhineLabUI-MIT.txt",
@@ -653,8 +653,8 @@
     },
     {
       "path": "src/renderer/src/components/FocusSettings.tsx",
-      "bytes": 4900,
-      "sha256": "7bfc5276097fefec014d5d8e60b54b38f8a97f09838468a5f3089dc7fc5dc8ed"
+      "bytes": 5319,
+      "sha256": "ba2e0d8c3b76aa523f6addf3b1586bd939ccadf277696067ccfd6b3c8e45331a"
     },
     {
       "path": "src/renderer/src/components/FocusWidget.tsx",
@@ -793,8 +793,8 @@
     },
     {
       "path": "src/renderer/src/components/StartupAnnouncement.tsx",
-      "bytes": 8771,
-      "sha256": "e10a9b806c2f2ec86274b3f9fe46a9379ef54afdd19756f558d72f28cb7187f1"
+      "bytes": 7767,
+      "sha256": "534e75eb33d537d64aa2ef7b276f9592de4072de77b9dead9c9f10b6c0218ecf"
     },
     {
       "path": "src/renderer/src/components/ThemePalette.tsx",
@@ -963,8 +963,8 @@
     },
     {
       "path": "src/renderer/src/pages/Focus.tsx",
-      "bytes": 44129,
-      "sha256": "3f4c5edd451cd2e8c9e99d48e70e6b5150f00e7a7ebac3b351fb2d0bd684b655"
+      "bytes": 44294,
+      "sha256": "0c78961fb135f69e3db33e2478562c03f209938b9ea59bc010381a2bdc1cb39f"
     },
     {
       "path": "src/renderer/src/pages/Habits.tsx",
@@ -1083,8 +1083,8 @@
     },
     {
       "path": "src/renderer/src/styles/focus-tasks.css",
-      "bytes": 1914,
-      "sha256": "cdd9f34e735ea676cc94e7cbffa090de55a749f2570b3ed33f1f92b7a10da839"
+      "bytes": 3649,
+      "sha256": "c2eb5f5deca79a7cb1c8c9a85a925c77ec7e3d2977b5dacf11f22347dc61b739"
     },
     {
       "path": "src/renderer/src/styles/focus-widget.css",
@@ -1093,8 +1093,8 @@
     },
     {
       "path": "src/renderer/src/styles/global.css",
-      "bytes": 6354,
-      "sha256": "a9208fc51490c6ad9ce8fdc464d8faf3bf873880dd4118ea4a54884dfafc674a"
+      "bytes": 7338,
+      "sha256": "72bc47154fc8fd3834968cf922477b7e897e458b84eccbcfd04336d59cf46259"
     },
     {
       "path": "src/renderer/src/styles/history-focus-summary.css",
@@ -1223,8 +1223,8 @@
     },
     {
       "path": "src/renderer/src/styles/theme-palette.css",
-      "bytes": 10079,
-      "sha256": "8528f8960273aae76f0eb46fd372a4265ab060f1b287010f01c8f4f3d50a581e"
+      "bytes": 10139,
+      "sha256": "1fe755685bf2b00e4449bd81fbfb87520bbf469b2f4b752f670c039c66a1b8bc"
     },
     {
       "path": "src/renderer/src/styles/theme-settings.css",
@@ -1253,8 +1253,8 @@
     },
     {
       "path": "src/shared/announcementContent.ts",
-      "bytes": 13302,
-      "sha256": "4d86ce93c2cd374313c0509588171e9531fb0b3b11c635dfaf876ef8774aa563"
+      "bytes": 13287,
+      "sha256": "9683a31a6939285ecb866b982f3bb1fde1ad98d486e9467efb6f23e016e08369"
     },
     {
       "path": "src/shared/backupArchive.ts",
@@ -1438,8 +1438,13 @@
     },
     {
       "path": "src/shared/personalRelease.ts",
-      "bytes": 1650,
-      "sha256": "d76bff873672a2e75cbdc602adc1920e85c1e274b0329a66fc1d3ea0725803cf"
+      "bytes": 2935,
+      "sha256": "1a2c2ba2c6b4ff9a2cf9f6d59a65e822f8712524cfb9e41851bea32d23b0f088"
+    },
+    {
+      "path": "src/shared/personalReleaseHistory.ts",
+      "bytes": 3496,
+      "sha256": "b36ee0148daaded22f367a48c35571d4c9926e4514c6c208f4c029074cce97c9"
     },
     {
       "path": "src/shared/privacyErasure.ts",
@@ -1507,5 +1512,5 @@
       "sha256": "5941d0d0aa6647ee5d43aa239f9897a8db32c545e0deb7164f8f8ed9e28c4cdf"
     }
   ],
-  "fileCount": 298
+  "fileCount": 299
 }

@@ -82,7 +82,8 @@
 .study-shell .music-library h2,.study-shell .music-library-row>button:first-child,.study-shell .music-track strong{color:#f5f5f5}
 .study-shell .music-timeline span,.study-shell .music-close,.study-shell .music-library-row small,.study-shell .music-message,.study-shell .music-remove,.study-shell .music-list-toggle,.study-shell .music-list-toggle span{color:var(--theme-muted)}
 .study-shell .music-library-row:hover{background:var(--theme-dark)}
-.study-shell input:not([type=range]):not([type=checkbox]),.study-shell textarea,.study-shell select,.study-shell select option{background:color-mix(in srgb,var(--theme-panel) 85%,transparent)}
+.study-shell input:not([type=range]):not([type=checkbox]),.study-shell textarea,.study-shell select{background:color-mix(in srgb,var(--theme-panel) 85%,transparent)}
+.study-shell select option,.study-shell select optgroup{background:var(--theme-panel)}
 
 /* Session time stays white; only its light carries the chosen accent. */
 .study-shell .summary-time,.study-shell .home-last-session strong{color:white;text-shadow:var(--focus-digit-glow)}

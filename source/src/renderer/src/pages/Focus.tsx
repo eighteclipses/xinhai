@@ -3,7 +3,9 @@ import GrowthNotes from '../components/GrowthNotes'
 import FocusWidget from '../components/FocusWidget'
 import FocusReminderReadiness from '../components/FocusReminderReadiness'
 import { showFocusReminder } from '../components/FocusReminder'
+import { goToSetting } from '../lib/settingNavigation'
 import { elapsedNow } from '../lib/elapsedClock'
+import { FOCUS_NOTE_SECONDS } from '../../../shared/focusRewards'
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useApp } from '../store/app'
@@ -686,9 +688,15 @@ export default function Focus({ active = true }: { active?: boolean }) {
               {savedTasks.length===0?<p>还没有常用任务，输入任务后即可保存。</p>:<div className="focus-task-table"><table><thead><tr><th>任务名称</th><th>操作</th></tr></thead><tbody>{savedTasks.map(t=><tr key={t.id}><td>{t.title}</td><td><button onClick={()=>{setTask(t.title);setTodoId(null)}} aria-label={'复用任务 '+t.title}>复用</button><button onClick={()=>deleteFocusTask(t.id)} aria-label={'删除任务 '+t.title}>删除</button></td></tr>)}</tbody></table></div>}
             </details>
             {taskError&&<p role="alert" className="journal-error">{taskError}</p>}
-            <p className="focus-reward-balance" role="status">每累计 25 分钟有效专注收获 1 个学习音符。已累计余数 {formatDuration(rewardState.remainderSeconds)}；待收下 {rewardState.pendingNotes} 个。</p>
-            {rewardState.pendingNotes>0&&<button className="btn" aria-label="集中收下学习音符" onClick={()=>void presentRewards()}>集中收下 {rewardState.pendingNotes} 个音符</button>}
-            <p className="focus-auto-rest-note">{settings.focusBackgroundBehavior==='wait'?'后台到时先停住，回来后再进入休息。':'后台继续轮换；回来后按有效专注与休息分别衔接。'}{settings.focusRewardPresentation==='batch'?'音符会保留到结束本次或主动集中收下。':'每段结束后收下已累计音符。'}</p>
+            <div className="focus-reward-guide">
+              <p>专注每满 25 分钟，获得 1 个学习音符。</p>
+              <p className="focus-reward-help">不足 25 分钟的时间会累计到下次。</p>
+              <div className="focus-reward-progress" role="status">
+                <span>距下一个音符 <b>{formatDuration(FOCUS_NOTE_SECONDS - rewardState.remainderSeconds)}</b></span>
+                {rewardState.pendingNotes > 0 && <button type="button" className="focus-reward-collect" aria-label="集中收下学习音符" onClick={() => void presentRewards()}>领取 {rewardState.pendingNotes} 个音符 ↗</button>}
+              </div>
+              <button type="button" className="focus-preferences-link" onClick={() => goToSetting('settings', 'settings-focus')}>后台计时与音符设置 ↗</button>
+            </div>
 
             {doneRounds > 0 && <p role="status">休息已跳过，准备好后再开始下一轮。</p>}
             {recoveryMessage && <p role="alert" className="journal-error">{recoveryMessage}</p>}
@@ -743,7 +751,7 @@ export default function Focus({ active = true }: { active?: boolean }) {
 
             </div>
             <div className="focus-ledger"><span>本次有效专注 <b>{formatDuration(focusSecondsRef.current)}</b></span><span>今日已保存 <b>{formatDuration(todaySeconds)}</b></span></div>
-            {rewardState.pendingNotes>0&&<button className="btn" aria-label="集中收下学习音符" onClick={()=>void presentRewards()}>待收下 {rewardState.pendingNotes} 个音符 · 集中收下</button>}
+            {rewardState.pendingNotes>0&&<button className="btn" aria-label="集中收下学习音符" onClick={()=>void presentRewards()}>领取 {rewardState.pendingNotes} 个音符</button>}
             {recoveryMessage && <p role="alert" className="journal-error">{recoveryMessage}</p>}
             <div style={{ marginTop: 20, fontFamily: 'var(--font-num)', fontSize: 14, letterSpacing: '0.3em', color: 'var(--ink-dim)' }}>
               ROUND {doneRounds + (mode === 'focus' ? 1 : 0)} / {cycles}
@@ -757,12 +765,12 @@ export default function Focus({ active = true }: { active?: boolean }) {
             <h2>这一段，完成了。</h2>
             <div className="summary-time" data-final-time>{formatDuration(result.session.seconds ?? result.session.minutes * 60)}</div>
             <p>本次有效专注 · 分:秒</p>
-            <div className="summary-award"><span>有效时间已累计</span><GrowthNotes points={result.growth.events.reduce((n,e)=>n+e.points,0)} exact/><small>每累计 25 分钟收获 1 个学习音符；余数跨多次专注保留。</small></div>
+            <div className="summary-award"><span>有效时间已累计</span><GrowthNotes points={result.growth.events.reduce((n,e)=>n+e.points,0)} exact/><small>专注每满 25 分钟获得 1 个学习音符，不足部分会累计到下次。</small></div>
             <p className="summary-task">{result.session.taskLabel || '自由专注'}</p>
             <p>今日累计 <b>{formatDuration(todaySeconds)}</b></p>
             <p className="focus-auto-rest-note" role="status">{result.session.mode === '完整番茄' ? '保存成功，休息会自动开始。' : '本次专注已结束，时间已保存。'}</p>
             {recoveryMessage && <p role="alert" className="journal-error">{recoveryMessage}</p>}
-            {rewardState.pendingNotes>0&&<button className="btn primary" aria-label="集中收下学习音符" onClick={()=>void presentRewards()}>集中收下 {rewardState.pendingNotes} 个音符</button>}
+            {rewardState.pendingNotes>0&&<button className="btn primary" aria-label="集中收下学习音符" onClick={()=>void presentRewards()}>领取 {rewardState.pendingNotes} 个音符</button>}
             <div className="summary-actions">{result.session.mode === '完整番茄' && <button className="btn primary" onClick={nextRound}>进入{doneRounds % cycles === 0 ? '长' : '短'}休息</button>}<button className="btn" onClick={() => void reset()}>新一段专注</button><button className="btn" onClick={() => { void reset().then(() => useApp.getState().go('home')) }}>返回桌面</button></div>
           </motion.section>
         )}

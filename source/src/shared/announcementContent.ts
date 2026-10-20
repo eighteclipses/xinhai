@@ -68,7 +68,7 @@ export const releaseNotes: ReleaseNote[] = [
   { version: '0.2.4', edition: 'shared', summary: '增加四段 Masquerade 人物动态主题与三张联动雨窗壁纸，采用角色色圆弧切换，支持公开歌单分享链接导入。' },
   { version: '0.2.2–0.2.3', edition: 'shared', summary: '原更新记录合并记载：新增自定义、可拖动月相时钟与随身听、居中专注、壁纸欣赏、本地背景导入及网易云登录/歌单同步。' },
   { version: '0.2.0–0.2.1', edition: 'shared', summary: '原更新记录合并记载：增加 Android 平板适配，成长数据与可选练习记录清理及撤销，保留专注、习惯、知识库和复习。' },
-  { version: '0.1.9', edition: 'shared', summary: '首次私有源码与 Windows 安装包记录；加入习惯拖动排序、删除与撤销、素材鸣谢和三月纪念内容。' },
+  { version: '0.1.9', edition: 'shared', summary: '首次私有源码与 Windows 安装包记录；加入习惯拖动排序、删除与撤销，以及素材鸣谢。' },
   { version: '0.1.8', edition: 'shared', summary: '日历可按日期回看学习与计划，完善待办、习惯记录和自定义背景。增加独立的体验版，与自用版分别保存资料。' },
   { version: '0.1.7', edition: 'personal', summary: '修复播放按钮被拉长的问题，统一进度与音量滑块比例，改善小窗口和系统缩放下的播放器布局。' },
   { version: '0.1.6', edition: 'personal', summary: '支持自动补全模型接口地址，修复后台换歌无声和成长演出退出问题，并调整底部导航与播放器高度。' },

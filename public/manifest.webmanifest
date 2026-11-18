@@ -1,0 +1,17 @@
+{
+  "name": "心海共学",
+  "short_name": "心海",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#061e40",
+  "theme_color": "#061e40",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
